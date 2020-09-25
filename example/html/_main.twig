@@ -1,0 +1,65 @@
+<!doctype html>
+{# <html amp{% if head.lang %} lang="{{ head.lang }}"{% endif %}> #}
+<html{% if head.lang %} lang="{{ head.lang }}"{% endif %}>
+<head>
+    <meta charset="utf-8">
+
+    {% block head_meta %}
+        {% include '_head_meta.twig' %}
+    {% endblock %}
+
+    {% set amp_version = '0.1' %}
+    {# <script async src="https://cdn.ampproject.org/v0.js"></script>
+    <script custom-element="amp-sidebar" src="https://cdn.ampproject.org/v0/amp-sidebar-{{ amp_version }}.js" async=""></script>
+    <script custom-element="amp-list" src="https://cdn.ampproject.org/v0/amp-list-{{ amp_version }}.js" async=""></script>
+    <script custom-element="amp-bind" src="https://cdn.ampproject.org/v0/amp-bind-{{ amp_version }}.js" async=""></script>
+    <script custom-element="amp-selector" src="https://cdn.ampproject.org/v0/amp-selector-{{ amp_version }}.js" async=""></script>
+    <script custom-template="amp-mustache" src="https://cdn.ampproject.org/v0/amp-mustache-0.2.js" async=""></script>
+    <script custom-element="amp-carousel" src="https://cdn.ampproject.org/v0/amp-carousel-{{ amp_version }}.js" async=""></script>
+    <script custom-element="amp-image-lightbox" src="https://cdn.ampproject.org/v0/amp-image-lightbox-{{ amp_version }}.js" async=""></script>
+
+    <script custom-element="amp-accordion" src="https://cdn.ampproject.org/v0/amp-accordion-{{ amp_version }}.js" async=""></script>
+    <script custom-element="amp-instagram" src="https://cdn.ampproject.org/v0/amp-instagram-{{ amp_version }}.js" async=""></script>
+    <script custom-element="amp-social-share" src="https://cdn.ampproject.org/v0/amp-social-share-{{ amp_version }}.js" async=""></script>
+
+    <script custom-element="amp-anim" src="https://cdn.ampproject.org/v0/amp-anim-{{ amp_version }}.js" async=""></script>
+    <script custom-element="amp-animation" src="https://cdn.ampproject.org/v0/amp-animation-{{ amp_version }}.js" async=""></script>
+    <script custom-element="amp-position-observer" src="https://cdn.ampproject.org/v0/amp-position-observer-{{ amp_version }}.js" async=""></script> #}
+
+    {% block head_end %}
+        {% include '_head_end.twig' %}
+    {% endblock %}
+</head>
+<body>
+{% block body %}
+    {% block header %}
+        <div class="header">
+            {% block header_inner %}
+                <header class="header--inner">
+                    {% block header_inner__ %}{% endblock %}
+                </header>
+            {% endblock %}
+        </div>
+    {% endblock %}
+
+    {% block container_inner %}
+        {% block content %}
+        {% endblock %}
+    {% endblock %}
+
+    {% block footer %}
+        <div class="footer">
+            {% block footer_inner %}
+                <footer class="footer--inner">
+                    {% block footer_inner__ %}{% endblock %}
+                </footer>
+            {% endblock %}
+        </div>
+    {% endblock %}
+
+    {% block body_end %}{% endblock %}
+
+    {% block foot_js %}{% endblock %}
+{% endblock %}
+</body>
+</html>

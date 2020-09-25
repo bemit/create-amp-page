@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2020 bemit
+Copyright (c) 2020 Michael Becker, michael@bemit.codes
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

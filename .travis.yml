@@ -1,0 +1,18 @@
+language: node_js
+node_js:
+  - 12
+install:
+  - npm install -g codecov
+  - npm ci
+script:
+  - npm run build-example
+  - npm run build
+deploy:
+  - provider: script
+    skip_cleanup: true
+    script: bash deploy.sh
+    on:
+      tags: true
+env:
+  global:
+    secure: QbbIc0Y3PCWIuBtMbIlmdjLtebk9AiFKGJlzS9csQkWU/rrMEQphBVxIcz5jA0e2g99jDrBgyEbx1exsmTjADuuEAhcG6coFTsa3kI6SG/8gkEDfI42TMyQdZVTm6sNYXf4xf3kaDwqpmLHboJlBVxum646753T+TJILC9eaIXeZqWmeZlx/ZFgpnqaQDnM4N9KQ5UQ44p9pCjPoQqV168BdU1R8lq6gbgdkbmqM2RDA/DXV2KDP0+Zv33jjlPMv5rYgkA1scju6cLi+zGCYZG6L9nOYBKVZOgMON13l7btSjqqTdMtvH7eKlBJoguR5V31M7CId3bY1kgIr3b4Ig5sTHmQ+CvBCTkK3CXSH8PbYHsQ5Hr2JCk+jUdGOmx+wDImcnirj2D58YFJkAI3QQVvxxxQGtogLxPJV06VfFA+eiLBGBDJIOey9q3pxUR1AiSFFjVpecy5wqvPQ4dtkKoPeLKuRdGjjxArghKj69+Op/Phr7cf0lRjyeSrT+QeoLJzYdZ9kdUZDyAeld2TJSlbVrXH06azSMHkwwILBxGoBr033Q1PLuC7dK4vs1nRso9hs7GzejvV//G0KwwXlGMc8QmWvvKHBDkfrJsQKYW6xb8aeA4YOG/DCIfu4ToBbGHr0NDLWCaGHHyqyUp1eVDUcWhO6tONRNRPkxIJDOyk=
