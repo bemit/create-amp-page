@@ -3,9 +3,9 @@
 Fast development of fast pages.
 
 [![npm (scoped)](https://img.shields.io/npm/v/create-amp-page?style=flat-square)](https://www.npmjs.com/package/create-amp-page)
-[![Travis (.com) master build](https://img.shields.io/travis/com/bemit/Formanta/master?style=flat-square)](https://travis-ci.com/bemit/Formanta)
-![Typed with TypeScript](https://flat.badgen.net/badge/icon/Typed?icon=typescript&label&labelColor=blue&color=555555)
-[![Run on CodeSandbox](https://img.shields.io/badge/run%20starter%20sandbox-grey?labelColor=fff&logoColor=505050&style=flat-square&logo=codesandbox)](https://codesandbox.io/s/github/bemit/create-amp-page-starter)
+[![Travis (.com) master build](https://img.shields.io/travis/com/bemit/create-amp-page/master?style=flat-square)](https://travis-ci.com/bemit/create-amp-page)
+![Typed](https://flat.badgen.net/badge/icon/Typed?icon=typescript&label&labelColor=blue&color=555555)
+[![try starter template](https://img.shields.io/badge/try%20starter%20template-grey?labelColor=fff&logoColor=505050&style=flat-square&logo=codesandbox)](https://codesandbox.io/s/github/bemit/create-amp-page-starter)
 
 Static site generator built with gulp tasks, using Twig templates, optimized for building [AMP](https://amp.dev) pages.
 
@@ -17,7 +17,7 @@ Support for Sass, CSS optimizing, media file compressing, copy tasks, Twig globa
 
 **1.** Create a project folder, init your project with `npm init`
 
-**2.** Create a `Gulpfile.js` and paste the following content in it. For all options and docs see the [AmpCreatorOptions typing](https://github.com/bemit/Formanta/blob/master/packages/create-amp-page/ampCreator.d.ts). 
+**2.** Create a `Gulpfile.js` and paste the following content in it. For all options and docs see the [AmpCreatorOptions typing](https://github.com/bemit/create-amp-page/blob/master/src/ampCreator.d.ts).
 
 ```js
 const path = require('path')
@@ -97,5 +97,3 @@ See: [LICENSE](LICENSE).
 ### Contributors
 
 By committing your code/creating a pull request to this repository you agree to release the code under the MIT License attached to the repository.
-
-This package is managed [in a monorepo](https://github.com/bemit/Formanta).
