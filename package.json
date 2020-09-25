@@ -1,6 +1,6 @@
 {
     "name": "create-amp-page",
-    "version": "0.0.4",
+    "version": "0.0.5",
     "license": "MIT",
     "homepage": "https://github.com/bemit/create-amp-page",
     "main": "index.js",
