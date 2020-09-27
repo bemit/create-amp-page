@@ -102,6 +102,19 @@ Two integrated ways of page generation:
 
 **Second** is also called `frontmatter-as-entrypoint` or `collections`, here the config `collections` can be used to define multiple folders and map them to their dist. The folder must contain frontmatter files, for each folder the files are rendered against one template. It is possible to have another `fmMap` logic for each folder.
 
+## Twig Functions
+
+### getImage
+
+Get metadata and sizing for image, caches the read-result for each execution, purging cache on each watch trigger of html.
+
+- params: `src` relative path to media folder incl. media folder
+- returns:
+    - `src` path to file
+    - `width` of file
+    - `height` of file
+    - `hash` sha1 hash of file content
+
 ## License
 
 This project is free software distributed under the **MIT License**.

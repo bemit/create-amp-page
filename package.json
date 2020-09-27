@@ -1,6 +1,6 @@
 {
     "name": "create-amp-page",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "license": "MIT",
     "homepage": "https://github.com/bemit/create-amp-page",
     "main": "index.js",
@@ -61,6 +61,7 @@
         "gulp-twig": "^1.2.0",
         "gulplog": "^1.0.0",
         "html-minifier": "^4.0.0",
+        "image-size": "^0.9.1",
         "imagemin-gifsicle": "^7.0.0",
         "imagemin-mozjpeg": "^8.0.0",
         "imagemin-optipng": "^7.1.0",

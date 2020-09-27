@@ -164,6 +164,17 @@ export interface AmpCreatorOptions {
 
     // additional folders to delete
     cleanFolders?: string[]
+
+    // overwrite config for the respective imagemin module
+    // todo: add typings
+    media?: {
+        gif?: Object | { interlaced: boolean }
+        jpg?: Object | { progressive: boolean }
+        png?: Object | { optimizationLevel: number }
+        svg?: Object | { plugins: Object[] }
+    } & Object | Object
+    // add further imagemin plugins, a function which receives the `imagemin` instance and returns an array of plugins
+    imageminPlugins?: (imagemin: any) => Function[]
 }
 
 export function getOptions(options: AmpCreatorOptions): AmpCreatorOptions

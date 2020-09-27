@@ -1,6 +1,9 @@
 {% extends '_base.twig' %}
 
 {% block content %}
+    {% embed 'image.twig' with {src: 'media/img-01.png', alt: 'A blog hero image', classes: ''} %}
+    {% endembed %}
+
     <section class="content-intro">
         <h1 class="demo-title bold normal mt0">Create AMP Page
             <a href="https://github.com/bemit/create-amp-page" style="vertical-align: top; padding: 1px;">

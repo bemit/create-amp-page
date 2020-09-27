@@ -1,0 +1,25 @@
+{# @formatter:off #}
+
+{% if getImage(src).hash %}
+    {% if ampEnabled %}
+        <amp-img
+    {% else %}
+        <img
+    {% endif %}
+
+            class="{{ classes }}"
+            alt="{{ alt }}"
+            src="{{ getImage(src).src ~ '?key=' ~ getImage(src).hash }}"
+            width="{{ getImage(src).width }}"
+            height="{{ getImage(src).height }}"
+            layout="responsive"
+
+    {% if ampEnabled %}
+        >
+    </amp-img>
+    {% else %}
+        >
+    {% endif %}
+{% endif %}
+
+{# @formatter:on #}

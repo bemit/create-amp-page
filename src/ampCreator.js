@@ -13,6 +13,7 @@ const plumber = require('gulp-plumber')
 const {getOptions} = require('./AmpCreatorOptions')
 const {twigDataHandler} = require('./twigDataHandler')
 const {twigMultiLoad, twigMultiSave} = require('./twigMultiRenderer')
+const {fn: getImage, clearCache} = require('./twigFnGetImage')
 const {ampOptimizer} = require('./ampOptimizer')
 const {cleanHtmlCss} = require('./cleanHtmlCss')
 const {injectCSS} = require('./injectCSS')
@@ -53,6 +54,8 @@ module.exports = function(options) {
         cleanInlineCSSWhitelist,
         cssInjectTag,
         collections,
+        media,
+        imageminPlugins,
     } = getOptions(options)
 
     function browserSync(done) {
@@ -97,10 +100,10 @@ module.exports = function(options) {
                 .pipe(newer(paths.dist + '/' + paths.distMedia))
                 .pipe(
                     imagemin([
-                        imagemin.gifsicle({interlaced: true}),
-                        imagemin.mozjpeg({progressive: true}),
-                        imagemin.optipng({optimizationLevel: 5}),
-                        imagemin.svgo({
+                        imagemin.gifsicle(media && media.gif ? media.gif : {interlaced: true}),
+                        imagemin.mozjpeg(media && media.jpg ? media.jpg : {progressive: true}),
+                        imagemin.optipng(media && media.png ? media.png : {optimizationLevel: 5}),
+                        imagemin.svgo(media && media.svg ? media.svg : {
                             plugins: [
                                 {
                                     removeViewBox: false,
@@ -108,6 +111,7 @@ module.exports = function(options) {
                                 },
                             ],
                         }),
+                        ...(imageminPlugins ? imageminPlugins(imagemin) : []),
                     ]),
                 )
                 .pipe(gulp.dest(paths.dist + '/' + paths.distMedia))
@@ -146,7 +150,7 @@ module.exports = function(options) {
                     base: paths.html,
                     trace: twig && twig.trace,
                     extend: twig && twig.extend,
-                    functions: twig && twig.functions,
+                    functions: twig && twig.functions ? [getImage(paths.media, paths.distMedia), ...twig.functions] : [getImage(paths.media, paths.distMedia)],
                     filters: twig && twig.filters,
                 }))
                 // // middlewares after twig compilation
@@ -199,7 +203,7 @@ module.exports = function(options) {
             // only when the stylesheet should be injected, HTML must be build after CSS
             paths.stylesInject ? series(cssFactory(false), htmlFactory(false)) : cssFactory(false),
         )
-        gulp.watch([paths.html + '/**/*.twig', ...watchFolders.twig], {ignoreInitial: false}, htmlFactory(false))
+        gulp.watch([paths.html + '/**/*.twig', ...watchFolders.twig], {ignoreInitial: false}, series(clearCache, htmlFactory(false)))
         gulp.watch([paths.media + '/**/*', ...watchFolders.media], {ignoreInitial: false}, imagesFactory())
 
         if(paths.copy) {
