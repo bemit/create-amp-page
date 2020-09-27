@@ -4,16 +4,16 @@ const {comb} = require('email-comb')
 const {minify: htmlmin} = require('html-minifier')
 const logger = require('gulplog')
 
-exports.cleanHtmlCss = function({removeInlineCSS, removeInlineCSSWhitelist = [], minifyHtml}) {
+exports.cleanHtmlCss = function({cleanInlineCSS, cleanInlineCSSWhitelist = [], minifyHtml}) {
     return through2.obj(async (file, _, cb) => {
         let startHtmlCSSSize = null
-        if((removeInlineCSS || minifyHtml) && file.isBuffer()) {
+        if((cleanInlineCSS || minifyHtml) && file.isBuffer()) {
             startHtmlCSSSize = Buffer.byteLength(file.contents.toString(), 'utf8')
             logger.info('HTML + CSS Size: ' + startHtmlCSSSize + ' bytes @' + path.basename(file.path))
         }
         let cleanedHtmlResult = null
-        if(removeInlineCSS && file.isBuffer()) {
-            cleanedHtmlResult = comb(file.contents.toString(), {whitelist: removeInlineCSSWhitelist})
+        if(cleanInlineCSS && file.isBuffer()) {
+            cleanedHtmlResult = comb(file.contents.toString(), {whitelist: cleanInlineCSSWhitelist})
             file.contents = Buffer.from(cleanedHtmlResult.result)
         }
         if(minifyHtml && file.isBuffer()) {
@@ -25,7 +25,7 @@ exports.cleanHtmlCss = function({removeInlineCSS, removeInlineCSSWhitelist = [],
                 removeAttributeQuotes: true,
             }))
         }
-        if((removeInlineCSS || minifyHtml) && file.isBuffer()) {
+        if((cleanInlineCSS || minifyHtml) && file.isBuffer()) {
             const cleanedHtmlCSSSize = Buffer.byteLength(file.contents.toString(), 'utf8')
             logger.info('Cleaned HTML + CSS Size: ' + cleanedHtmlCSSSize + ' bytes, saved ' + (startHtmlCSSSize - cleanedHtmlCSSSize) + ' bytes' + (cleanedHtmlResult ? ', removed CSS selectors: ' + cleanedHtmlResult.deletedFromBody.length + ' from body and ' + cleanedHtmlResult.deletedFromHead.length + ' from head' : '') + ' @' + path.basename(file.path))
         }

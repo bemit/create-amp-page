@@ -133,8 +133,8 @@ export interface AmpCreatorOptions {
     cssInjectTag?: string
 
     // remove unused inline CSS
-    removeInlineCSS?: boolean
-    removeInlineCSSWhitelist?: string[]
+    cleanInlineCSS?: boolean
+    cleanInlineCSSWhitelist?: string[]
 
     // minify HTML, when not using `ampOptimize`
     minifyHtml?: boolean

@@ -16,7 +16,7 @@ module.exports = ampCreator({
     },
     ampOptimize: process.env.NODE_ENV === 'production',
     // minifyHtml: false,
-    removeInlineCSS: process.env.NODE_ENV === 'production',
+    cleanInlineCSS: process.env.NODE_ENV === 'production',
     // for css injection of non-AMP pages:
     // cssInjectTag: '<style>',
     twig: {

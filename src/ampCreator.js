@@ -48,8 +48,8 @@ module.exports = function(options) {
         cleanFolders = [],
         ampOptimize,
         minifyHtml,
-        removeInlineCSS,
-        removeInlineCSSWhitelist,
+        cleanInlineCSS,
+        cleanInlineCSSWhitelist,
         cssInjectTag,
     } = getOptions(options)
 
@@ -154,8 +154,8 @@ module.exports = function(options) {
                 // middlewares after CSS injection
                 .pipe(cleanHtmlCss({
                     minifyHtml,
-                    removeInlineCSS,
-                    removeInlineCSSWhitelist,
+                    cleanInlineCSS,
+                    cleanInlineCSSWhitelist,
                 }))
                 .pipe(ampOptimizer(ampOptimize))
                 .pipe(gulp.dest(paths.dist))

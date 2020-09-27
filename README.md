@@ -46,7 +46,7 @@ module.exports = ampCreator({
     },
     // faster rebuilds on dev:
     ampOptimize: process.env.NODE_ENV === 'production',
-    removeInlineCSS: process.env.NODE_ENV === 'production',
+    cleanInlineCSS: process.env.NODE_ENV === 'production',
     prettyUrlExtensions: ['html'],
 })
 ```
