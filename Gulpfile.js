@@ -14,6 +14,11 @@ module.exports = ampCreator({
         distMedia: 'media',
         distStyles: 'styles',
     },
+    collections: [{
+        data: 'example/data/blog/*.md',
+        tpl: 'example/html/blog.twig',
+        base: 'blog/',
+    }],
     ampOptimize: process.env.NODE_ENV === 'production',
     // minifyHtml: false,
     cleanInlineCSS: process.env.NODE_ENV === 'production',
@@ -22,11 +27,15 @@ module.exports = ampCreator({
     twig: {
         data: {ampEnabled: true},
         fm: (file) => './example/data/' + path.basename(file).replace('.twig', '') + '.md',
-        fmMap: (data) => ({
+        fmMap: (data, file) => ({
             head: {
                 title: data.attributes.title,
                 description: data.attributes.description,
                 lang: data.attributes.lang,
+            },
+            content: data.body,
+            links: {
+                canonical: 'http://localhost:4488/' + file.relative,
             },
         }),
     },

@@ -1,6 +1,6 @@
 'use strict'
 // system
-const fs = require('fs')
+const path = require('path')
 const colors = require('colors/safe')
 // General
 const {series, parallel, ...gulp} = require('gulp')
@@ -12,6 +12,7 @@ const plumber = require('gulp-plumber')
 // create-amp-page internals
 const {getOptions} = require('./AmpCreatorOptions')
 const {twigDataHandler} = require('./twigDataHandler')
+const {twigMultiLoad, twigMultiSave} = require('./twigMultiRenderer')
 const {ampOptimizer} = require('./ampOptimizer')
 const {cleanHtmlCss} = require('./cleanHtmlCss')
 const {injectCSS} = require('./injectCSS')
@@ -51,6 +52,7 @@ module.exports = function(options) {
         cleanInlineCSS,
         cleanInlineCSSWhitelist,
         cssInjectTag,
+        collections,
     } = getOptions(options)
 
     function browserSync(done) {
@@ -137,30 +139,59 @@ module.exports = function(options) {
     }
 
     function htmlFactory(failOnSize = true) {
-        return function html() {
-            return gulp.src(paths.htmlPages + '/*.twig')
-                .pipe(twigDataHandler(twig))
-                // middlewares before twig compilation
-                .pipe(twigGulp({
+
+        // share twig logic for `twig-as-entrypoint` and `frontmatter-as-entrypoint` (collections)
+        const twigHandler = (task) => {
+            return task.pipe(twigGulp({
                     base: paths.html,
                     trace: twig && twig.trace,
                     extend: twig && twig.extend,
                     functions: twig && twig.functions,
                     filters: twig && twig.filters,
                 }))
-                // middlewares after twig compilation
-                // middlewares for style injection
+                // // middlewares after twig compilation
+                // // middlewares for style injection
                 .pipe(injectCSS({paths, failOnSize, injectTag: cssInjectTag}))
-                // middlewares after CSS injection
+                // // middlewares after CSS injection
                 .pipe(cleanHtmlCss({
                     minifyHtml,
                     cleanInlineCSS,
                     cleanInlineCSSWhitelist,
                 }))
                 .pipe(ampOptimizer(ampOptimize))
+        }
+
+        const htmlTasks = []
+        htmlTasks.push(function html() {
+            return twigHandler(
+                gulp.src(paths.htmlPages + '/*.twig')
+                    .pipe(twigDataHandler(twig)),
+            )
                 .pipe(gulp.dest(paths.dist))
                 .pipe(browsersync.stream())
+        })
+
+        if(collections && Array.isArray(collections)) {
+            collections.forEach(collection => {
+                htmlTasks.push(function htmlCollection() {
+                    return twigHandler(
+                        gulp.src(collection.data)
+                            .pipe(twigMultiLoad(
+                                {
+                                    ...twig,
+                                    ...(collection.fmMap ? {fmMap: collection.fmMap} : {}),
+                                    ...(collection.customMerge ? {customMerge: collection.customMerge} : {}),
+                                },
+                                collection.tpl,
+                            )),
+                    )
+                        .pipe(twigMultiSave(collection.ext))
+                        .pipe(gulp.dest(path.join(paths.dist, collection.base)))
+                        .pipe(browsersync.stream())
+                })
+            })
         }
+        return parallel(...htmlTasks)
     }
 
     function watchFiles() {
@@ -199,7 +230,7 @@ module.exports = function(options) {
                 ),
             ),
         )
-    const watch = parallel(watchOverride ? watchOverride(gulp, {cssFactory, htmlFactory, imagesFactory}) : watchFiles, browserSync)
+    const watch = series(clean, parallel(watchOverride ? watchOverride(gulp, {cssFactory, htmlFactory, imagesFactory}) : watchFiles, browserSync))
 
     return {
         images: imagesFactory(),

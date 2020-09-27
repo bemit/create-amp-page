@@ -1,4 +1,3 @@
-const path = require('path')
 const through2 = require('through2')
 const {comb} = require('email-comb')
 const {minify: htmlmin} = require('html-minifier')
@@ -9,7 +8,7 @@ exports.cleanHtmlCss = function({cleanInlineCSS, cleanInlineCSSWhitelist = [], m
         let startHtmlCSSSize = null
         if((cleanInlineCSS || minifyHtml) && file.isBuffer()) {
             startHtmlCSSSize = Buffer.byteLength(file.contents.toString(), 'utf8')
-            logger.info('HTML + CSS Size: ' + startHtmlCSSSize + ' bytes @' + path.basename(file.path))
+            logger.info('HTML + CSS Size: ' + startHtmlCSSSize + ' bytes @' + (file.pathData || file.path).substr(file.cwd.length + 1))
         }
         let cleanedHtmlResult = null
         if(cleanInlineCSS && file.isBuffer()) {
@@ -27,7 +26,10 @@ exports.cleanHtmlCss = function({cleanInlineCSS, cleanInlineCSSWhitelist = [], m
         }
         if((cleanInlineCSS || minifyHtml) && file.isBuffer()) {
             const cleanedHtmlCSSSize = Buffer.byteLength(file.contents.toString(), 'utf8')
-            logger.info('Cleaned HTML + CSS Size: ' + cleanedHtmlCSSSize + ' bytes, saved ' + (startHtmlCSSSize - cleanedHtmlCSSSize) + ' bytes' + (cleanedHtmlResult ? ', removed CSS selectors: ' + cleanedHtmlResult.deletedFromBody.length + ' from body and ' + cleanedHtmlResult.deletedFromHead.length + ' from head' : '') + ' @' + path.basename(file.path))
+            if(cleanedHtmlResult) {
+                logger.info('Removed CSS selectors: ' + cleanedHtmlResult.deletedFromBody.length + ' from body and ' + cleanedHtmlResult.deletedFromHead.length + ' from head')
+            }
+            logger.info('Cleaned HTML + CSS Size: ' + cleanedHtmlCSSSize + ' bytes, saved ' + (startHtmlCSSSize - cleanedHtmlCSSSize) + ' bytes @' + (file.pathData || file.path).substr(file.cwd.length))
         }
         cb(null, file)
     })

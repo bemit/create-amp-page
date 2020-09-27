@@ -1,9 +1,10 @@
 {
     "name": "create-amp-page",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "license": "MIT",
     "homepage": "https://github.com/bemit/create-amp-page",
     "main": "index.js",
+    "author": "Michael Becker <https://mlbr.xyz>",
     "keywords": [
         "amp",
         "accelerated-mobile-pages",
@@ -13,7 +14,9 @@
         "gulp",
         "twig",
         "sass",
-        "frontmatter"
+        "frontmatter",
+        "netlify",
+        "netlify-cms"
     ],
     "repository": {
         "type": "git",
@@ -32,7 +35,6 @@
     },
     "dependencies": {
         "@ampproject/toolbox-optimizer": "^2.6.0",
-        "html-minifier": "^4.0.0",
         "@types/gulp": "^4.0.6",
         "@types/twig": "^1.12.3",
         "autoprefixer": "^9.7.6",
@@ -58,10 +60,12 @@
         "gulp-sass": "^4.0.2",
         "gulp-twig": "^1.2.0",
         "gulplog": "^1.0.0",
+        "html-minifier": "^4.0.0",
         "imagemin-gifsicle": "^7.0.0",
         "imagemin-mozjpeg": "^8.0.0",
         "imagemin-optipng": "^7.1.0",
         "imagemin-svgo": "^7.1.0",
+        "map-stream": "0.0.7",
         "node-sass-tilde-importer": "^1.0.2",
         "postcss-import": "^12.0.1",
         "through2": "^4.0.2"

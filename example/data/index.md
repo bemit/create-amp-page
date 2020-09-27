@@ -1,7 +1,8 @@
 ---
-title: Formanta Mini CSS Framework
+title: Create AMP Page Example
 lang: en
-description: Mini CSS Framework with modular Sass files - max. 44KB! Low-level OOCSS framework which includes most important components for fast development.
+description: The test playground for the create-amp-page static side generator
 ---
-
-Demo Content that is not used.
+**Unparsed** demo content, Markdown support must be added, for example in `fmMap` or `customMerge`.
+ 
+Check the starter template as example.

@@ -1,6 +1,12 @@
 import { extendFilter, extendFunction, extendTest, extendTag } from 'twig'
 import { Gulp } from 'gulp'
 
+export type fmMap = (
+    data: { attributes: Object, body: string, bodyBegin: number, frontmatter: string },
+    file: { path: string, relative: string, base: string, cwd: string, pathData?: string }
+) => Object
+export type customMerge = (data1: Object, data2: Object) => Object
+
 export interface CopyInfo {
     // array of paths / glob patterns that will be copied
     src: string[]
@@ -45,6 +51,22 @@ export interface AmpCreatorOptions {
         historyFallback?: string
     },
 
+    // generate pages by frontmatter, use one template for multiple input data files
+    collections?: {
+        // path to content directory, is passed to `gulp.src`
+        data: string
+        // path to the single template that will be used
+        tpl: string
+        // relative base to dist
+        base: string
+        // overwrite global `fmMap` for this collection
+        fmMap?: fmMap
+        // overwrite global `customMerge` for this collection
+        customMerge?: customMerge
+        // used extension, needed for file handling, defaults to `.md`
+        ext?: string
+    }[]
+
     // which extensions should be removed for prettier URLs, like `/contact` instead of `/contact.html`
     prettyUrlExtensions?: string[]
 
@@ -62,11 +84,11 @@ export interface AmpCreatorOptions {
         fm?: (file: string) => string
         // receives the front matter and absolute path, for mapping to template values;
         // required when `fm` exists, otherwise not used
-        fmMap?: (data: { attributes: Object, body: string, bodyBegin: number, frontmatter: string }, file: string) => Object
+        fmMap?: fmMap
         // merge function to produce data from multiple sources for twig, optional;
         // used for merging the three twig data sources: global (`twig.data`), `twig.json` and `twig.fm`;
         // like let data = customMerge(globalTwigData, jsonData); data = customMerge(data, fmData);
-        customMerge?: (data1: Object, data2: Object) => Object
+        customMerge?: customMerge
         // enables tracing info logging
         trace?: boolean
         // extends Twig with new tags types, the `Twig` parameter is the internal Twig.js object;
@@ -134,6 +156,7 @@ export interface AmpCreatorOptions {
 
     // remove unused inline CSS
     cleanInlineCSS?: boolean
+    // css selectors which must not be removed, `.classes`, `#ids`, `.simple-whitelist-*`, `h1`, `p`
     cleanInlineCSSWhitelist?: string[]
 
     // minify HTML, when not using `ampOptimize`
