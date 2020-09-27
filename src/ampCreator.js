@@ -9,6 +9,12 @@ const gulpCopy = require('gulp-copy')
 const del = require('del')
 const replace = require('gulp-replace')
 const plumber = require('gulp-plumber')
+// create-amp-page internals
+const {getOptions} = require('./AmpCreatorOptions')
+const {twigDataHandler} = require('./twigDataHandler')
+const {ampOptimizer} = require('./ampOptimizer')
+const {cleanHtmlCss} = require('./cleanHtmlCss')
+const {injectCSS} = require('./injectCSS')
 // Sass / CSS
 const autoprefixer = require('autoprefixer')
 const postcssImport = require('postcss-import')
@@ -24,27 +30,28 @@ const imagemin = require('gulp-imagemin')
 const newer = require('gulp-newer')
 // Template Rendering
 const twigGulp = require('gulp-twig')
-const data = require('gulp-data')
-const fm = require('front-matter')
 
-module.exports = function({
-                              paths,
-                              port,
-                              prettyUrlExtensions,
-                              historyFallback,
-                              serveStaticMiddleware = [],
-                              twig,
-                              watchFolders = {
-                                  sass: [],
-                                  twig: [],
-                                  media: [],
-                              },
-                              watchOverride,
-                              cleanFolders = [],
-                          }) {
-    const watchFoldersSass = watchFolders.sass || []
-    const watchFoldersTwig = watchFolders.twig || []
-    const watchFoldersMedia = watchFolders.media || []
+module.exports = function(options) {
+    const {
+        paths,
+        port,
+        prettyUrlExtensions,
+        historyFallback,
+        serveStaticMiddleware = [],
+        twig,
+        watchFolders = {
+            sass: [],
+            twig: [],
+            media: [],
+        },
+        watchOverride,
+        cleanFolders = [],
+        ampOptimize,
+        minifyHtml,
+        removeInlineCSS,
+        removeInlineCSSWhitelist,
+        cssInjectTag,
+    } = getOptions(options)
 
     function browserSync(done) {
         browsersync.init({
@@ -129,37 +136,11 @@ module.exports = function({
         }
     }
 
-    function htmlFactory(requireCss = true) {
+    function htmlFactory(failOnSize = true) {
         return function html() {
             return gulp.src(paths.htmlPages + '/*.twig')
-                .pipe(data(function(file) {
-                    let data = twig && twig.data ? twig.data : {}
-                    if(twig && twig.json) {
-                        if(twig.customMerge) {
-                            data = this.customMerge(data, JSON.parse(fs.readFileSync(twig.json(file.path))))
-                        } else {
-                            data = {
-                                ...data,
-                                ...JSON.parse(fs.readFileSync(twig.json(file.path))),
-                            }
-                        }
-                    }
-
-                    if(twig && twig.fm && twig.fmMap) {
-                        const content = fm(String(fs.readFileSync(twig.fm(file.path))))
-                        //file.contents = Buffer.from(content.body)
-                        if(twig.customMerge) {
-                            data = this.customMerge(data, twig.fmMap(content, file.path))
-                        } else {
-                            data = {
-                                ...data,
-                                ...twig.fmMap(content, file.path),
-                            }
-                        }
-                    }
-
-                    return data
-                }))
+                .pipe(twigDataHandler(twig))
+                // middlewares before twig compilation
                 .pipe(twigGulp({
                     base: paths.html,
                     trace: twig && twig.trace,
@@ -167,55 +148,51 @@ module.exports = function({
                     functions: twig && twig.functions,
                     filters: twig && twig.filters,
                 }))
-                .pipe(replace(/style amp-custom>/, function() {
-                    if(!paths.stylesInject) return 'style amp-custom>'
-
-                    let style = ''
-                    try {
-                        style = fs.readFileSync(paths.dist + '/' + paths.distStyles + '/' + paths.stylesInject, 'utf8')
-                        if(Buffer.byteLength(style, 'utf8') > 75000) {
-                            logger.error(colors.red('Style Size: ' + (Buffer.byteLength(style, 'utf8')) + ' bytes'))
-                            if(requireCss) throw new Error('css file exceeds amp limit of 75kb')
-                        } else {
-                            logger.info('Style Size: ' + (Buffer.byteLength(style, 'utf8')) + ' bytes')
-                        }
-                    } catch(err) {
-                        if(requireCss || err.code !== 'ENOENT') {
-                            // only throw if other error then file not-found
-                            throw err
-                        }
-                    }
-                    return 'style amp-custom>\n' + style + '\n'
+                // middlewares after twig compilation
+                // middlewares for style injection
+                .pipe(injectCSS({paths, failOnSize, injectTag: cssInjectTag}))
+                // middlewares after CSS injection
+                .pipe(cleanHtmlCss({
+                    minifyHtml,
+                    removeInlineCSS,
+                    removeInlineCSSWhitelist,
                 }))
+                .pipe(ampOptimizer(ampOptimize))
                 .pipe(gulp.dest(paths.dist))
                 .pipe(browsersync.stream())
         }
     }
 
     function watchFiles() {
-        gulp.watch([paths.styles + '/**/*.(scss|sass)', ...watchFoldersSass], {ignoreInitial: false},
+        gulp.watch([paths.styles + '/**/*.(scss|sass)', ...watchFolders.sass], {ignoreInitial: false},
             // only when the stylesheet should be injected, HTML must be build after CSS
             paths.stylesInject ? series(cssFactory(false), htmlFactory(false)) : cssFactory(false),
         )
-        gulp.watch([paths.html + '/**/*.twig', ...watchFoldersTwig], {ignoreInitial: false}, htmlFactory(false))
-        gulp.watch([paths.media + '/**/*', ...watchFoldersMedia], {ignoreInitial: false}, imagesFactory())
+        gulp.watch([paths.html + '/**/*.twig', ...watchFolders.twig], {ignoreInitial: false}, htmlFactory(false))
+        gulp.watch([paths.media + '/**/*', ...watchFolders.media], {ignoreInitial: false}, imagesFactory())
 
-        let copies = paths.copy
-        if(!Array.isArray(copies)) {
-            copies = [copies]
+        if(paths.copy) {
+            let copies = paths.copy
+            if(!Array.isArray(copies)) {
+                copies = [copies]
+            }
+            copies.forEach(copyOne => {
+                // todo: add something like "sync-the-files" instead of copy for watch
+                gulp.watch(copyOne.src, {ignoreInitial: false}, copyFactory(copyOne))
+            })
         }
-        copies.forEach(copyOne => {
-            // todo: add something like "sync-the-files" instead of copy for watch
-            gulp.watch(copyOne.src, {ignoreInitial: false}, copyFactory(copyOne))
-        })
     }
 
     const build =
         series(clean,
             parallel(
-                ...(paths.copy ? [Array.isArray(paths.copy) ? paths.copy.map(copySingle => (
-                    copyFactory(copySingle)
-                )) : copyFactory(paths.copy)] : []),
+                ...(paths.copy ?
+                    [Array.isArray(paths.copy) ?
+                        paths.copy.map(copySingle => (
+                            copyFactory(copySingle)
+                        )) :
+                        copyFactory(paths.copy)] :
+                    []),
                 series(
                     cssFactory(true),
                     parallel(htmlFactory(true), imagesFactory()),

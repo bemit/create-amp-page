@@ -3,21 +3,22 @@
 Fast development of fast pages.
 
 [![npm (scoped)](https://img.shields.io/npm/v/create-amp-page?style=flat-square)](https://www.npmjs.com/package/create-amp-page)
+[![npm (scoped)](https://img.shields.io/npm/dm/create-amp-page.svg?style=flat-square)](https://npmcharts.com/compare/create-amp-page?interval=30)
 [![Travis (.com) master build](https://img.shields.io/travis/com/bemit/create-amp-page/master?style=flat-square)](https://travis-ci.com/bemit/create-amp-page)
 ![Typed](https://flat.badgen.net/badge/icon/Typed?icon=typescript&label&labelColor=blue&color=555555)
 [![try starter template](https://img.shields.io/badge/try%20starter%20template-grey?labelColor=fff&logoColor=505050&style=flat-square&logo=codesandbox)](https://codesandbox.io/s/github/bemit/create-amp-page-starter)
 
 Static site generator built with gulp tasks, using Twig templates, optimized for building [AMP](https://amp.dev) pages.
 
-Support for Sass, CSS optimizing, media file compressing, copy tasks, Twig global and optional per-page data with JSON and/or frontmatter, browsersync with custom static server middlewares.
+Support for Sass, CSS optimizing, CSS into head injection, media file compressing, copy tasks, Twig global and optional per-page data with JSON and/or frontmatter, browsersync with custom static server middlewares, [AMP Optimizer](https://amp.dev/documentation/guides-and-tutorials/optimize-and-measure/amp-optimizer-guide/) or HTML Minifier (for non-AMP), remove unused CSS (currently only for inline CSS).
 
-[Simple starter template?](#starter-template)
+Checkout the [starter template](https://github.com/bemit/create-amp-page-starter)!
 
 ## Quick Start
 
 **1.** Create a project folder, init your project with `npm init`
 
-**2.** Create a `Gulpfile.js` and paste the following content in it. For all options and docs see the [AmpCreatorOptions typing](https://github.com/bemit/create-amp-page/blob/master/src/ampCreator.d.ts).
+**2.** Create a `Gulpfile.js` and paste the following content in it. For all options and docs see the [AmpCreatorOptions typing](https://github.com/bemit/create-amp-page/blob/master/src/AmpCreatorOptions.d.ts).
 
 ```js
 const path = require('path')
@@ -43,6 +44,9 @@ module.exports = ampCreator({
         // custom global template data
         data: {},
     },
+    // faster rebuilds on dev:
+    ampOptimize: process.env.NODE_ENV === 'production',
+    removeInlineCSS: process.env.NODE_ENV === 'production',
     prettyUrlExtensions: ['html'],
 })
 ```
@@ -53,8 +57,8 @@ module.exports = ampCreator({
 {
     "scripts": {
         "tasks": "gulp --tasks",
-        "start": "gulp watch",
-        "build": "gulp build",
+        "start": "cross-env NODE_ENV=development gulp watch",
+        "build": "cross-env NODE_ENV=production gulp build",
         "clean": "gulp clean"
     }
 }

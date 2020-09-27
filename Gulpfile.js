@@ -10,15 +10,17 @@ module.exports = ampCreator({
         html: 'example/html',
         htmlPages: 'example/html/pages',
         media: 'example/media',
-        copy: [
-            {src: ['./example/api/*'], prefix: 1},
-            {src: ['./public/*'], prefix: 2},
-        ],
         dist: 'example/build',
         distMedia: 'media',
         distStyles: 'styles',
     },
+    ampOptimize: process.env.NODE_ENV === 'production',
+    // minifyHtml: false,
+    removeInlineCSS: process.env.NODE_ENV === 'production',
+    // for css injection of non-AMP pages:
+    // cssInjectTag: '<style>',
     twig: {
+        data: {ampEnabled: true},
         fm: (file) => './example/data/' + path.basename(file).replace('.twig', '') + '.md',
         fmMap: (data) => ({
             head: {
