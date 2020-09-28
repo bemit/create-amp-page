@@ -3,7 +3,7 @@ const gulp = require('gulp')
 function makeCopyTask({copyPaths, dist, browsersync}) {
     const gulpCopy = require('gulp-copy')
 
-    function copyTasks(copyInfo) {
+    function makeCopyTasks(copyInfo) {
         return function copy() {
             return gulp
                 .src(copyInfo.src)
@@ -21,7 +21,7 @@ function makeCopyTask({copyPaths, dist, browsersync}) {
                 }
                 copies.forEach(copyOne => {
                     // todo: add something like "sync-the-files" instead of copy for watch
-                    gulp.watch(copyOne.src, watchOptions, copyFactory(copyOne))
+                    gulp.watch(copyOne.src, watchOptions, makeCopyTasks(copyOne))
                 })
             }
         },
@@ -29,9 +29,9 @@ function makeCopyTask({copyPaths, dist, browsersync}) {
             [
                 Array.isArray(copyPaths) ?
                     copyPaths.map(copySingle => (
-                        copyFactory(copySingle)
+                        makeCopyTasks(copySingle)
                     )) :
-                    copyFactory(copyPaths),
+                    makeCopyTasks(copyPaths),
             ] :
             [],
     }
