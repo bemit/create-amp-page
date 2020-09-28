@@ -11,7 +11,7 @@ Fast development of fast pages.
 
 Static site generator built with gulp tasks, using Twig templates, optimized for building [AMP](https://amp.dev) pages.
 
-Support for Sass, CSS optimizing, CSS into head injection, media file compressing, copy tasks, Twig global and optional per-page data with JSON and/or frontmatter, browsersync with custom static server middlewares, [AMP Optimizer](https://amp.dev/documentation/guides-and-tutorials/optimize-and-measure/amp-optimizer-guide/) or HTML Minifier (for non-AMP), remove unused CSS (currently only for inline CSS). Different ways to define pages, can be connected with e.g. netlify cms.
+Support for Sass, CSS optimizing, CSS into head injection, media file compressing, automatic resizing of images by `srcset`, endless copy tasks, Twig global and optional per-page data with JSON and/or frontmatter, browsersync with custom static server middlewares, [AMP Optimizer](https://amp.dev/documentation/guides-and-tutorials/optimize-and-measure/amp-optimizer-guide/) or HTML Minifier (for non-AMP), remove unused CSS (currently only for inline CSS). Different ways to define pages, can be connected with e.g. netlify cms.
 
 Checkout the [starter template](https://github.com/bemit/create-amp-page-starter)!
 
@@ -108,12 +108,77 @@ Two integrated ways of page generation:
 
 Get metadata and sizing for image, caches the read-result for each execution, purging cache on each watch trigger of html.
 
-- params: `src` relative path to media folder incl. media folder
+- params: 
+    - `src` is the relative path to media folder incl. media folder
+    - `srcset` is an array of objects, define in which image sizes the image should be resized
+        - `w` = width in pixels, internally it calculates the other value proportional
 - returns:
     - `src` path to file
     - `width` of file
     - `height` of file
     - `hash` sha1 hash of file content
+    
+#### getImage Twig Example
+
+Template using `getImage(src, srcset)` to fetch metadata and resize images when needed:
+
+```twig
+{% set image = getImage(src, srcset) %}
+<amp-img
+    src="{{ image.src ~ '?key=' ~ (image.hash|slice(0,12)) }}"
+    width="{{ image.width }}"
+    height="{{ image.height }}"
+    {# generate srcset with same syntax like `getImage` #}
+    srcset="{% for set in srcset %}{{ addImageSuffix(image.src, '_'~set.w~'w') ~ '?key=' ~ (image.hash|slice(0,12))~' '~set.w~'w' }}{% if loop.index < (srcset|length) %}, {% endif %}{% endfor %}"
+    sizes="{{ sizes }}"
+    layout="responsive"
+></amp-img>
+```
+
+Embed then in file, pixels at `srcset`:
+
+```twig
+{% embed 'image.twig' with {
+    src: '/media/img-01.png',
+    alt: 'A blog hero image',
+    classes: 'flex',
+    srcset: [
+        {w: '320'},
+        {w: '680'},
+        {w: '920'}
+    ],
+    sizes: '(max-width: 320px) 320px, (max-width: 600px) 680px',
+} %}
+{% endembed %}
+```
+
+Generates HTML like: 
+
+```html
+ <amp-img
+    src="/media/img-01.png?key=2l8ybbe1tjSP"
+    width="1280" height="421"
+    srcset="/media/img-01_320w.png?key=2l8ybbe1tjSP 320w, /media/img-01_680w.png?key=2l8ybbe1tjSP 680w, /media/img-01_920w.png?key=2l8ybbe1tjSP 920w"
+    sizes="(max-width: 320px) 320px, (max-width: 600px) 680px"
+layout="responsive"
+></amp-img>
+```
+
+### addImageSuffix
+
+Add an image suffix between name and extension:
+
+```twig
+{{ addImageSuffix(image.src, '_suffix') }}
+```
+
+### embedScript
+
+To embed e.g. css or js files directly in build template, uses the `src` relative to configured `dist`:
+
+```twig
+{{ embedScript('js/main.js') }}
+```
 
 ## License
 

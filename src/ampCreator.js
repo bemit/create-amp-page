@@ -69,6 +69,7 @@ module.exports = function(options, wrap) {
         paths, twig,
         ampOptimize,
         minifyHtml,
+        imageminPlugins,
         cleanInlineCSS,
         cleanInlineCSSWhitelist,
         cssInjectTag,
@@ -85,7 +86,7 @@ module.exports = function(options, wrap) {
         )
         gulp.watch(
             [paths.html + '/**/*.twig', ...watchFolders.twig], watchOptions,
-            series(require('./htmlTask/twigFunctions').clearGetImageCache, gulpHtml),
+            series(require('./htmlTask/twigFnMedia').clearGetMediaCache, gulpHtml),
         )
         gulp.watch(
             [paths.media + '/**/*', ...watchFolders.media], watchOptions, gulpMedia,

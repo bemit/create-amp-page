@@ -9,8 +9,12 @@ const {cleanHtmlCss} = require('./cleanHtmlCss')
 const {injectCSS} = require('./injectCSS')
 
 const {
-    getImage, embedScript,
+    embedScript,
 } = require('./twigFunctions')
+
+const {
+    getImage, resizeUsedImages, addImageSuffix,
+} = require('./twigFnMedia')
 
 const makeTwigHandler = ({
                              paths, twig,
@@ -23,6 +27,7 @@ const makeTwigHandler = ({
     const extendedTwigFunctions = [
         getImage(paths.media, paths.distMedia),
         embedScript(paths.dist),
+        addImageSuffix,
     ]
 
     // share twig logic for `twig-as-entrypoint` and `frontmatter-as-entrypoint` (collections)
@@ -61,6 +66,7 @@ const makeHtmlTask = (
         collections,
         browsersync,
         additionalHtmlTasks = [],
+        imageminPlugins,
         ...options
     },
 ) => {
@@ -99,7 +105,7 @@ const makeHtmlTask = (
 
     htmlTasks.push(...additionalHtmlTasks)
 
-    return parallel(htmlTasks)
+    return series(parallel(htmlTasks), resizeUsedImages({...paths, imageminPlugins}))
 }
 
 exports.makeHtmlTask = makeHtmlTask

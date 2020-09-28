@@ -1,7 +1,22 @@
 {% extends '_base.twig' %}
 
 {% block content %}
-    {% embed 'image.twig' with {src: 'media/img-01.png', alt: 'A blog hero image', classes: ''} %}
+    {% embed 'image.twig' with {
+        src: '/media/img-01.png',
+        alt: 'A blog hero image',
+        classes: 'flex',
+        srcset: [{
+            _w_docs: 'w = width in pixels',
+            w: '320',
+        },{
+            _w_docs: 'w = width in pixels',
+            w: '680',
+        },{
+            _w_docs: 'w = width in pixels',
+            w: '920',
+        }],
+        sizes: '(max-width: 320px) 320px, (max-width: 600px) 680px',
+    } %}
     {% endembed %}
 
     <section class="content-intro">
