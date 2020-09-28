@@ -1,64 +1,44 @@
 'use strict'
-// system
-const path = require('path')
-const colors = require('colors/safe')
 // General
-const {series, parallel, ...gulp} = require('gulp')
-const logger = require('gulplog')
-const gulpCopy = require('gulp-copy')
+const gulp = require('gulp')
 const del = require('del')
-const replace = require('gulp-replace')
-const plumber = require('gulp-plumber')
 // create-amp-page internals
 const {getOptions} = require('./AmpCreatorOptions')
-const {twigDataHandler} = require('./twigDataHandler')
-const {twigMultiLoad, twigMultiSave} = require('./twigMultiRenderer')
-const {fn: getImage, clearCache} = require('./twigFnGetImage')
-const {ampOptimizer} = require('./ampOptimizer')
-const {cleanHtmlCss} = require('./cleanHtmlCss')
-const {injectCSS} = require('./injectCSS')
-// Sass / CSS
-const autoprefixer = require('autoprefixer')
-const postcssImport = require('postcss-import')
-const cssnano = require('cssnano')
-const postcss = require('gulp-postcss')
-const sass = require('gulp-sass')
-const tildeImporter = require('node-sass-tilde-importer')
 // Static Server
 const browsersync = require('browser-sync').create()
 const historyApiFallback = require('connect-history-api-fallback')
-// Image
-const imagemin = require('gulp-imagemin')
-const newer = require('gulp-newer')
-// Template Rendering
-const twigGulp = require('gulp-twig')
+// task factories
+const {makeHtmlTask} = require('./htmlTask')
+const {makeMediaTask} = require('./mediaTask')
+const {makeCssTask} = require('./cssTask')
+const {makeCopyTask} = require('./copyTask')
 
-module.exports = function(options) {
+const {series, parallel} = gulp
+
+module.exports = function(options, wrap) {
+
     const {
         paths,
-        port,
-        prettyUrlExtensions,
-        historyFallback,
-        serveStaticMiddleware = [],
+        // browsersync
+        port, prettyUrlExtensions, serveStaticMiddleware,
+        // clean
+        cleanFolders,
+        // html / twig
         twig,
-        watchFolders = {
-            sass: [],
-            twig: [],
-            media: [],
-        },
-        watchOverride,
-        cleanFolders = [],
         ampOptimize,
         minifyHtml,
         cleanInlineCSS,
         cleanInlineCSSWhitelist,
         cssInjectTag,
         collections,
-        media,
-        imageminPlugins,
+        // media
+        media, imageminPlugins,
+        // watch
+        watchFolders,
+        watchOptions,
     } = getOptions(options)
 
-    function browserSync(done) {
+    function browserSyncSetup(done) {
         browsersync.init({
             open: false,
             notify: false,
@@ -69,8 +49,8 @@ module.exports = function(options) {
                     extensions: prettyUrlExtensions,
                 },
                 middleware: [
-                    ...(historyFallback ? [historyApiFallback({
-                        index: historyFallback,
+                    ...(paths.historyFallback ? [historyApiFallback({
+                        index: paths.historyFallback,
                     })] : []),
                     ...serveStaticMiddleware,
                 ],
@@ -84,162 +64,67 @@ module.exports = function(options) {
         return del([paths.dist, ...cleanFolders])
     }
 
-    function copyFactory(copyInfo) {
-        return function copy() {
-            return gulp
-                .src(copyInfo.src)
-                .pipe(browsersync.stream())
-                .pipe(gulpCopy(paths.dist, {prefix: copyInfo.prefix}))
-        }
-    }
+    const gulpCss = makeCssTask(paths, browsersync)
+    const gulpHtml = makeHtmlTask({
+        paths, twig,
+        ampOptimize,
+        minifyHtml,
+        cleanInlineCSS,
+        cleanInlineCSSWhitelist,
+        cssInjectTag,
+        collections,
+        browsersync,
+    })
+    const gulpMedia = makeMediaTask({paths, media, imageminPlugins, browsersync})
+    const gulpCopyTasks = makeCopyTask({copyPaths: paths.copy, dist: paths.dist, browsersync})
 
-    function imagesFactory() {
-        return function images() {
-            return gulp
-                .src(paths.media + '/**/*')
-                .pipe(newer(paths.dist + '/' + paths.distMedia))
-                .pipe(
-                    imagemin([
-                        imagemin.gifsicle(media && media.gif ? media.gif : {interlaced: true}),
-                        imagemin.mozjpeg(media && media.jpg ? media.jpg : {progressive: true}),
-                        imagemin.optipng(media && media.png ? media.png : {optimizationLevel: 5}),
-                        imagemin.svgo(media && media.svg ? media.svg : {
-                            plugins: [
-                                {
-                                    removeViewBox: false,
-                                    collapseGroups: true,
-                                },
-                            ],
-                        }),
-                        ...(imageminPlugins ? imageminPlugins(imagemin) : []),
-                    ]),
-                )
-                .pipe(gulp.dest(paths.dist + '/' + paths.distMedia))
-                .pipe(browsersync.stream())
-        }
-    }
-
-    function cssFactory(fail = true) {
-        return function css(done) {
-            return gulp
-                .src(paths.styles + '/**/*.{scss,sass}')
-                .pipe(plumber({
-                    errorHandler: function(error) {
-                        logger.error(colors.red('Error in css build:') + '\n' + error.message)
-                        if(fail) throw error
-                        done()
-                    },
-                }))
-                .pipe(sass({
-                    outputStyle: 'expanded',
-                    importer: tildeImporter,
-                }))
-                .pipe(gulp.dest(paths.dist + '/' + paths.distStyles))
-                .pipe(postcss([postcssImport(), autoprefixer(), cssnano()]))
-                .pipe(replace('@charset "UTF-8";', ''))
-                .pipe(gulp.dest(paths.dist + '/' + paths.distStyles))
-                .pipe(browsersync.stream())
-        }
-    }
-
-    function htmlFactory(failOnSize = true) {
-
-        // share twig logic for `twig-as-entrypoint` and `frontmatter-as-entrypoint` (collections)
-        const twigHandler = (task) => {
-            return task.pipe(twigGulp({
-                    base: paths.html,
-                    trace: twig && twig.trace,
-                    extend: twig && twig.extend,
-                    functions: twig && twig.functions ? [getImage(paths.media, paths.distMedia), ...twig.functions] : [getImage(paths.media, paths.distMedia)],
-                    filters: twig && twig.filters,
-                }))
-                // // middlewares after twig compilation
-                // // middlewares for style injection
-                .pipe(injectCSS({paths, failOnSize, injectTag: cssInjectTag}))
-                // // middlewares after CSS injection
-                .pipe(cleanHtmlCss({
-                    minifyHtml,
-                    cleanInlineCSS,
-                    cleanInlineCSSWhitelist,
-                }))
-                .pipe(ampOptimizer(ampOptimize))
-        }
-
-        const htmlTasks = []
-        htmlTasks.push(function html() {
-            return twigHandler(
-                gulp.src(paths.htmlPages + '/*.twig')
-                    .pipe(twigDataHandler(twig)),
-            )
-                .pipe(gulp.dest(paths.dist))
-                .pipe(browsersync.stream())
-        })
-
-        if(collections && Array.isArray(collections)) {
-            collections.forEach(collection => {
-                htmlTasks.push(function htmlCollection() {
-                    return twigHandler(
-                        gulp.src(collection.data)
-                            .pipe(twigMultiLoad(
-                                {
-                                    ...twig,
-                                    ...(collection.fmMap ? {fmMap: collection.fmMap} : {}),
-                                    ...(collection.customMerge ? {customMerge: collection.customMerge} : {}),
-                                },
-                                collection.tpl,
-                            )),
-                    )
-                        .pipe(twigMultiSave(collection.ext))
-                        .pipe(gulp.dest(path.join(paths.dist, collection.base)))
-                        .pipe(browsersync.stream())
-                })
-            })
-        }
-        return parallel(...htmlTasks)
-    }
-
-    function watchFiles() {
-        gulp.watch([paths.styles + '/**/*.(scss|sass)', ...watchFolders.sass], {ignoreInitial: false},
+    function gulpWatch() {
+        gulp.watch([paths.styles + '/**/*.(scss|sass)', ...watchFolders.sass], watchOptions,
             // only when the stylesheet should be injected, HTML must be build after CSS
-            paths.stylesInject ? series(cssFactory(false), htmlFactory(false)) : cssFactory(false),
+            paths.stylesInject ? series(gulpCss, gulpHtml) : gulpCss,
         )
-        gulp.watch([paths.html + '/**/*.twig', ...watchFolders.twig], {ignoreInitial: false}, series(clearCache, htmlFactory(false)))
-        gulp.watch([paths.media + '/**/*', ...watchFolders.media], {ignoreInitial: false}, imagesFactory())
+        gulp.watch(
+            [paths.html + '/**/*.twig', ...watchFolders.twig], watchOptions,
+            series(require('./htmlTask/twigFunctions').clearGetImageCache, gulpHtml),
+        )
+        gulp.watch(
+            [paths.media + '/**/*', ...watchFolders.media], watchOptions, gulpMedia,
+        )
 
-        if(paths.copy) {
-            let copies = paths.copy
-            if(!Array.isArray(copies)) {
-                copies = [copies]
-            }
-            copies.forEach(copyOne => {
-                // todo: add something like "sync-the-files" instead of copy for watch
-                gulp.watch(copyOne.src, {ignoreInitial: false}, copyFactory(copyOne))
-            })
-        }
+        gulpCopyTasks.watch(watchOptions)
     }
 
-    const build =
-        series(clean,
-            parallel(
-                ...(paths.copy ?
-                    [Array.isArray(paths.copy) ?
-                        paths.copy.map(copySingle => (
-                            copyFactory(copySingle)
-                        )) :
-                        copyFactory(paths.copy)] :
-                    []),
-                series(
-                    cssFactory(true),
-                    parallel(htmlFactory(true), imagesFactory()),
-                ),
-            ),
-        )
-    const watch = series(clean, parallel(watchOverride ? watchOverride(gulp, {cssFactory, htmlFactory, imagesFactory}) : watchFiles, browserSync))
+    const builder = parallel(
+        gulpCopyTasks.build,
+        series(
+            gulpCss,
+            parallel(gulpHtml, gulpMedia),
+        ),
+    )
+    const build = series(
+        clean,
+        builder,
+    )
 
-    return {
-        images: imagesFactory(),
+    const watch = series(
+        clean,
+        parallel(gulpWatch, browserSyncSetup),
+    )
+
+    const tasks = {
+        // deprecated: images task will be renamed in the future to `media`
+        css: gulpCss,
+        html: gulpHtml,
+        images: gulpMedia,
+        media: gulpMedia,
         clean,
         build,
+        builder,
         watch,
+        watcher: gulpWatch,
     }
+
+    return wrap ?
+        wrap(gulp, tasks, options, {gulpCopyTasks, makeHtmlTask, makeMediaTask, makeCssTask, makeCopyTask, browsersync, browserSyncSetup}) :
+        tasks
 }

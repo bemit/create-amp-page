@@ -1,6 +1,6 @@
 {
     "name": "create-amp-page",
-    "version": "0.1.2",
+    "version": "0.2.0",
     "license": "MIT",
     "homepage": "https://github.com/bemit/create-amp-page",
     "main": "index.js",
@@ -25,7 +25,7 @@
     "scripts": {
         "tasks": "gulp --tasks",
         "start": "cross-env NODE_ENV=development gulp watch",
-        "build": "mkdirp build && cp src/* build/ && cp package.json build/ && cp package-lock.json build/ && cp README.md build/ && cp LICENSE.md build/",
+        "build": "mkdirp build && cp -r src/* build/ && cp package.json build/ && cp package-lock.json build/ && cp README.md build/ && cp LICENSE.md build/",
         "build-example": "cross-env NODE_ENV=production gulp build",
         "clean": "gulp clean"
     },
@@ -69,6 +69,7 @@
         "map-stream": "0.0.7",
         "node-sass-tilde-importer": "^1.0.2",
         "postcss-import": "^12.0.1",
+        "sharp": "^0.26.1",
         "through2": "^4.0.2"
     }
 }

@@ -115,19 +115,6 @@ export interface AmpCreatorOptions {
         twig?: []
         media?: []
     }
-    // overrides the default watch function used, receives the gulp instance;
-    // must return the actual watch task function;
-    watchOverride?: (
-        gulp: Gulp,
-        factories: {
-            // returns the actual function handling Sass to CSS and CSS optimized, fail=true = fail-on-warnings
-            cssFactory: (fail?: boolean) => Function
-            // returns the actual function handling Twig to HTML, failOnSize=true = fail if CSS is bigger then 75KB (AMP compatibility)
-            htmlFactory: (failOnSize?: boolean) => Function
-            // returns the actual function handling media optimizes
-            imagesFactory: () => Function
-        }
-    ) => Function
 
     // auto use default configs with `true`;
     // or specify custom options, see all:
