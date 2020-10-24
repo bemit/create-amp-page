@@ -28,7 +28,9 @@ function cssHandler(stream, done) {
         .pipe(replace('@charset "UTF-8";', ''))
 }
 
-function cssTask(paths, browsersync) {
+exports.cssHandler = cssHandler
+
+function makeCssTask(paths, browsersync) {
     return function gulpCss(done) {
         return cssHandler(
             gulp
@@ -40,4 +42,4 @@ function cssTask(paths, browsersync) {
     }
 }
 
-module.exports = cssTask
+exports.makeCssTask = makeCssTask

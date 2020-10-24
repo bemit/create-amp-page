@@ -4,7 +4,6 @@
     <meta charset="utf-8">
 
     {% block head_meta %}
-        {% include '_head_meta.twig' %}
     {% endblock %}
 
     {% if ampEnabled %}
@@ -13,8 +12,7 @@
         <script custom-element="amp-image-lightbox" src="https://cdn.ampproject.org/v0/amp-image-lightbox-{{ amp_version }}.js" async=""></script>
     {% endif %}
 
-    {% block head_end %}
-        {% include '_head_end.twig' %}
+    {% block head_style %}
     {% endblock %}
 </head>
 <body>

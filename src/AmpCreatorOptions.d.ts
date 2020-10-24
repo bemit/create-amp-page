@@ -1,5 +1,4 @@
 import { extendFilter, extendFunction, extendTest, extendTag } from 'twig'
-import { Gulp } from 'gulp'
 
 export type fmMap = (
     data: { attributes: Object, body: string, bodyBegin: number, frontmatter: string },
@@ -89,8 +88,6 @@ export interface AmpCreatorOptions {
         // used for merging the three twig data sources: global (`twig.data`), `twig.json` and `twig.fm`;
         // like let data = customMerge(globalTwigData, jsonData); data = customMerge(data, fmData);
         customMerge?: customMerge
-        // enables tracing info logging
-        trace?: boolean
         // extends Twig with new tags types, the `Twig` parameter is the internal Twig.js object;
         // https://github.com/twigjs/twig.js/wiki/Extending-twig.js-With-Custom-Tags
         extend?: (
@@ -107,6 +104,14 @@ export interface AmpCreatorOptions {
         functions?: TwigFunction[]
         // add custom filters to Twig
         filters?: TwigFunction[]
+        // output file extension including the '.' like path.extname(filename). Use true to keep source extname and a "falsy" value to drop the file extension
+        outputExtname?: string
+        // enables debug info logging
+        debug?: boolean
+        // enables tracing info logging
+        trace?: boolean
+        // enables the twig build cache
+        cache?: boolean
     }
 
     // configuring the watched folders for the main tasks

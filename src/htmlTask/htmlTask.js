@@ -34,7 +34,6 @@ const makeTwigHandler = ({
     return (stream) => {
         return stream.pipe(twigGulp({
                 base: paths.html,
-                trace: twig && twig.trace,
                 extend: twig && twig.extend,
                 functions: twig && twig.functions ?
                     [
@@ -43,6 +42,10 @@ const makeTwigHandler = ({
                     ] :
                     extendedTwigFunctions,
                 filters: twig && twig.filters,
+                extname: twig && typeof twig.outputExtname !== 'undefined' ? twig.outputExtname : '.html',
+                cache: !!(twig && twig.cache),
+                debug: !!(twig && twig.debug),
+                trace: !!(twig && twig.trace),
             }))
             // // middlewares after twig compilation
             // // middlewares for style injection

@@ -1,1 +1,3 @@
-exports.makeCssTask = require('./cssTask')
+const {cssHandler, makeCssTask} = require('./cssTask')
+exports.cssHandler = cssHandler
+exports.makeCssTask = makeCssTask
