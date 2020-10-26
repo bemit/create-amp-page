@@ -1,25 +1,27 @@
 import { AmpCreatorOptions } from '../AmpCreatorOptions'
 import { TaskFunction } from 'undertaker'
+import * as stream from 'stream'
 
 export interface MakeTwigHandlerConfig {
-    twig: Pick<AmpCreatorOptions, 'twig'>
-    paths: Pick<AmpCreatorOptions, 'paths'>
-    ampOptimize: Pick<AmpCreatorOptions, 'ampOptimize'>
-    minifyHtml: Pick<AmpCreatorOptions, 'minifyHtml'>
-    cleanInlineCSS: Pick<AmpCreatorOptions, 'cleanInlineCSS'>
-    cleanInlineCSSWhitelist: Pick<AmpCreatorOptions, 'cleanInlineCSSWhitelist'>
-    cssInjectTag: Pick<AmpCreatorOptions, 'cssInjectTag'>
+    twig: AmpCreatorOptions['twig']
+    paths: AmpCreatorOptions['paths']
+    ampOptimize: AmpCreatorOptions['ampOptimize']
+    minifyHtml: AmpCreatorOptions['minifyHtml']
+    cleanInlineCSS: AmpCreatorOptions['cleanInlineCSS']
+    cleanInlineCSSWhitelist: AmpCreatorOptions['cleanInlineCSSWhitelist']
+    cssInjectTag: AmpCreatorOptions['cssInjectTag']
+    cssBuffer?: stream.Transform
 }
 
-export function makeTwigHandler(config: MakeTwigHandlerConfig): NodeJS.WritableStream
+export function makeTwigHandler(config: MakeTwigHandlerConfig): () => NodeJS.ReadWriteStream
 
 export interface MakeHtmlTaskConfig extends MakeTwigHandlerConfig {
-    twig: Pick<AmpCreatorOptions, 'twig'>
-    paths: Pick<AmpCreatorOptions, 'paths'>
-    collections: Pick<AmpCreatorOptions, 'collections'>
+    twig: AmpCreatorOptions['twig']
+    paths: AmpCreatorOptions['paths']
+    collections: AmpCreatorOptions['collections']
     browsersync: any | { stream: Function }
     additionalHtmlTasks: any[]
-    imageminPlugins: Pick<AmpCreatorOptions, 'imageminPlugins'>
+    imageminPlugins: AmpCreatorOptions['imageminPlugins']
 }
 
 export function makeHtmlTask(config: MakeHtmlTaskConfig): TaskFunction
