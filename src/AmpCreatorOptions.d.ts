@@ -78,9 +78,9 @@ export interface AmpCreatorOptions {
         data?: { [key: string]: any }
         // receives the absolute path to the template file, optional;
         // must return path to JSON file to use as data for this template
-        json?: (file: string) => string
+        json?: (file: string) => string | undefined
         // receives the absolute path to the template file, must return path to frontmatter file, optional
-        fm?: (file: string) => string
+        fm?: (file: string) => string | undefined
         // receives the front matter and absolute path, for mapping to template values;
         // required when `fm` exists, otherwise not used
         fmMap?: fmMap

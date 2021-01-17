@@ -10,6 +10,8 @@ const mediaOptimizer = require('../mediaTask/mediaOptimizer')
 
 const getRelativeMediaPath = (src, distMedia) => src.replace(new RegExp(distMedia, 'i'), '')
 
+const containsRelativeSize = (size) => size.indexOf('%') !== -1 || size.indexOf('vw') !== -1
+
 const {resizeUsedImages, getImage, clearGetMediaCache} = (() => {
     const imageRefs = {current: {}}
 
@@ -48,16 +50,26 @@ const {resizeUsedImages, getImage, clearGetMediaCache} = (() => {
                     }
                 }
             }
-            if(imageRefs.current[src]) {
-                srcset.forEach(set => {
-                    if(set.w && !set.h) {
-                        imageRefs.current[src].srcset[set.w + 'w'] = {width: set.w}
-                    } else if(!set.w && set.h) {
-                        imageRefs.current[src].srcset[set.h + 'h'] = {height: set.h}
-                    } else if(set.w && set.h) {
-                        imageRefs.current[src].srcset[set.h + 'w' + set.h + 'h'] = {width: set.w, height: set.h}
-                    }
-                })
+            if(imageRefs.current[src] && srcset) {
+                if(Array.isArray(srcset)) {
+                    srcset.forEach(set => {
+                        if(set.w && !set.h) {
+                            if(!containsRelativeSize(set.w)) {
+                                imageRefs.current[src].srcset[set.w + 'w'] = {width: set.w}
+                            }
+                        } else if(!set.w && set.h) {
+                            if(!containsRelativeSize(set.h)) {
+                                imageRefs.current[src].srcset[set.h + 'h'] = {height: set.h}
+                            }
+                        } else if(set.w && set.h) {
+                            if(!containsRelativeSize(set.w) && !containsRelativeSize(set.h)) {
+                                imageRefs.current[src].srcset[set.h + 'w' + set.h + 'h'] = {width: set.w, height: set.h}
+                            }
+                        }
+                    })
+                } else {
+                    logger.error('srcset is set, but no array at src `' + src + '`, it is typeof ' + (typeof srcset))
+                }
             }
             return imageRefs.current[src]
         },
@@ -165,9 +177,11 @@ exports.resizeUsedImages = resizeUsedImages
 exports.getImage = getImage
 exports.clearGetMediaCache = clearGetMediaCache
 
+// todo: rename to better `domain` function for adding size suffix
 const addImageSuffix = (src = '', suffix = '') => {
     const lowerSrc = src.toLowerCase()
     const exts = ['.jpg', '.jpeg', '.png']
+    // `.svg` must not be suffixed with `width` (as always relative), so here it is ignored in general
     // todo: add also generic
     exts.forEach(foundExt => {
         if(lowerSrc.endsWith(foundExt)) {

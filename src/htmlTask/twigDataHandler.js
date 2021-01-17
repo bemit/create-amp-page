@@ -42,12 +42,18 @@ exports.twigDataHandler = function twigDataHandler({data = {}, customMerge, json
     return gulpData(function(file) {
         let jsonContent
         if(json) {
-            jsonContent = JSON.parse(fs.readFileSync(json(file.path)).toString())
+            const jsonFile = json(file.path)
+            if(typeof jsonFile !== 'undefined') {
+                jsonContent = JSON.parse(fs.readFileSync(jsonFile).toString())
+            }
         }
 
         let fmContent
         if(fm && fmMap) {
-            fmContent = fs.readFileSync(fm(file.path)).toString()
+            const fmFile = fm(file.path)
+            if(typeof fmFile !== 'undefined') {
+                fmContent = fs.readFileSync(fmFile).toString()
+            }
         }
         return handleData(data, customMerge, jsonContent, fmContent, fmMap, file)
     })
