@@ -76,10 +76,13 @@ export interface AmpCreatorOptions {
     twig?: {
         // data passed globally to the twig templates, optional
         data?: { [key: string]: any }
-        // receives the absolute path to the template file, optional;
+        // receives the absolute path to the template file, optional
         // must return path to JSON file to use as data for this template
+        // for "file does not exist" without an error return `undefined`
         json?: (file: string) => string | undefined
-        // receives the absolute path to the template file, must return path to frontmatter file, optional
+        // receives the absolute path to the template file, optional
+        // must return path to front-matter file
+        // for "file does not exist" without an error return `undefined`
         fm?: (file: string) => string | undefined
         // receives the front matter and absolute path, for mapping to template values;
         // required when `fm` exists, otherwise not used
@@ -104,8 +107,14 @@ export interface AmpCreatorOptions {
         functions?: TwigFunction[]
         // add custom filters to Twig
         filters?: TwigFunction[]
+        // a function that is reloaded every runtime and supplied additional twig logics,
+        // for e.g. changing `functions` and `filters` without restarting the whole gulp process
+        logicLoader?: () => {
+            functions?: TwigFunction[]
+            filters?: TwigFunction[]
+        }
         // output file extension including the '.' like path.extname(filename). Use true to keep source extname and a "falsy" value to drop the file extension
-        outputExtname?: string
+        outputExtname?: string | boolean
         // enables debug info logging
         debug?: boolean
         // enables tracing info logging
@@ -116,9 +125,9 @@ export interface AmpCreatorOptions {
 
     // configuring the watched folders for the main tasks
     watchFolders?: {
-        sass?: []
-        twig?: []
-        media?: []
+        sass?: string[]
+        twig?: string[]
+        media?: string[]
     }
 
     // auto use default configs with `true`;

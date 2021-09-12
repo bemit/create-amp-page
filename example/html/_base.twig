@@ -13,27 +13,12 @@
     {% if head.keywords %}
         <meta name="keywords" content="{{ head.keywords }}">
     {% endif %}
-    {# {% if head.lang %}
-        <meta http-equiv="language" content="{{ head.lang }}">
-    {% endif %} #}
 
     <meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1">
 
     {% if links.canonical %}
         <link rel="canonical" href="{{ links.canonical }}">
     {% endif %}
-
-    {# <script type="application/ld+json">
-        {
-            "@context": "http://schema.org",
-            "@type": "NewsArticle",
-            "headline": "Open-source framework for publishing content",
-            "datePublished": "2015-10-07T12:02:41Z",
-            "image": [
-                "logo.jpg"
-            ]
-        }
-    </script> #}
 {% endblock %}
 
 {% block head_style %}
@@ -55,7 +40,7 @@
 {% block footer_inner__ %}
     <div class="footer--end">
         <p class="center">
-            © 2015 - 2020
+            © 2015 - 2021
             <a href="https://mlbr.xyz">Michael Becker</a>,
             <a href="https://bemit.eu">bemit<small> UG (haftungsbeschränkt)</small></a>
         </p>

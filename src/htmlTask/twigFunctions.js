@@ -1,7 +1,7 @@
-const path = require('path')
-const fs = require('fs')
+import path from 'path'
+import fs from 'fs'
 
-exports.embedScript = (dist) => ({
+export const embedScript = (dist) => ({
     name: 'embedScript',
     func: (src) => {
         let file
@@ -11,6 +11,8 @@ exports.embedScript = (dist) => ({
             if(process.env.NODE_ENV === 'production') {
                 console.error(e)
                 throw e
+            } else if(e.code === 'ENOENT') {
+                console.warn('embedScript file not found: ' + src)
             } else {
                 console.warn(e)
             }

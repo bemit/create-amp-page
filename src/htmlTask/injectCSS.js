@@ -1,7 +1,8 @@
-const fs = require('fs')
-const colors = require('colors/safe')
-const logger = require('gulplog')
-const replace = require('gulp-replace')
+import fs from 'fs'
+import colors from 'colors/safe.js'
+import logger from 'gulplog'
+import replace from 'gulp-replace'
+
 /**
  *
  * @param paths
@@ -9,7 +10,7 @@ const replace = require('gulp-replace')
  * @param injectTag
  * @param cssBuffer
  */
-exports.injectCSS = function(
+export function injectCSS(
     {
         paths,
         failOnSize,

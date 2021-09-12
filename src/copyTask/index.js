@@ -1,1 +1,1 @@
-exports.makeCopyTask = require('./copyTask')
+export * from './copyTask.js'

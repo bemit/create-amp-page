@@ -1,16 +1,16 @@
-const through2 = require('through2')
+import through2 from 'through2'
+import AmpOptimizer from '@ampproject/toolbox-optimizer'
 
-const AmpOptimizer = require('@ampproject/toolbox-optimizer')
 let ampOptimizerRef = {current: null}
-const ampOptimizer = AmpOptimizer.create()
+const ampOptimizerLib = AmpOptimizer.create()
 
-exports.ampOptimizer = function(doOptimize) {
+export function ampOptimizer(doOptimize) {
     if(!ampOptimizerRef.current) {
         ampOptimizerRef.current = AmpOptimizer.create(typeof doOptimize === 'object' ? doOptimize : undefined)
     }
     return through2.obj(async (file, _, cb) => {
         if(doOptimize && file.isBuffer()) {
-            const optimizedHtml = await ampOptimizer.transformHtml(
+            const optimizedHtml = await ampOptimizerLib.transformHtml(
                 file.contents.toString(),
                 {},
             )

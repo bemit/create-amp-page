@@ -36,4 +36,13 @@ export type WrapFunction = (
     }
 ) => Object
 
-export function ampCreator(options: AmpCreatorOptions, wrap?: WrapFunction): AmpTasks
+export type SetupFunction = (options: AmpCreatorOptions) => AmpCreatorOptions
+
+/**
+ * Creates ready to use tasks for gulp using the specified options
+ *
+ * @param options base options, e.g. paths
+ * @param setup for easier dynamic setup of e.g. twig options, using the defined base options
+ * @param wrap for reuse of base functions, internal gulp instances, for custom gulp functions
+ */
+export function ampCreator(options: AmpCreatorOptions, setup?: SetupFunction | undefined, wrap?: WrapFunction): AmpTasks

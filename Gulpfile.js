@@ -1,8 +1,9 @@
-'use strict'
-const path = require('path')
-const {ampCreator} = require('./src')
+import path from 'path'
+import gulp from 'gulp'
+import {ampCreator} from './src/index.js'
 
-module.exports = ampCreator({
+
+const tasks = ampCreator({
     port: 4488,
     paths: {
         styles: 'example/styles',
@@ -41,3 +42,5 @@ module.exports = ampCreator({
     },
     prettyUrlExtensions: ['html'],
 })
+
+Object.keys(tasks).forEach(taskName => gulp.task(taskName, tasks[taskName]))

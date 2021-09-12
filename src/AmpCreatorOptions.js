@@ -1,4 +1,4 @@
-exports.getOptions = function getOptions(
+export const getOptions = function getOptions(
     {
         // setting defaults and so on for some easier usages
         watchFolders = {},

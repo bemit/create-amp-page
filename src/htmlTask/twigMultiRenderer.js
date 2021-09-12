@@ -1,9 +1,8 @@
-'use strict'
-const path = require('path')
-const map = require('map-stream')
-const {handleData} = require('./twigDataHandler')
+import path from 'path'
+import map from 'map-stream'
+import {handleData} from './twigDataHandler.js'
 
-exports.twigMultiLoad = function(
+export function twigMultiLoad(
     {data = {}, customMerge, fmMap},
     tpl,
 ) {
@@ -17,7 +16,7 @@ exports.twigMultiLoad = function(
     return map(applyMatterGetTpl)
 }
 
-exports.twigMultiSave = function(ext = '.md') {
+export function twigMultiSave(ext = '.md') {
     function getPagePath(file, cb) {
         file.path = file.pathData.replace(new RegExp(ext), '.html')
         cb(null, file)

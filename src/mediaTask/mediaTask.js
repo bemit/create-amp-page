@@ -1,9 +1,9 @@
-const path = require('path')
-const newer = require('gulp-newer')
-const gulp = require('gulp')
-const mediaOptimizer = require('./mediaOptimizer')
+import path from 'path'
+import newer from 'gulp-newer'
+import gulp from 'gulp'
+import {mediaOptimizer} from './mediaOptimizer.js'
 
-function makeMediaTask({paths, media, imageminPlugins, browsersync}) {
+export function makeMediaTask({paths, media, imageminPlugins, browsersync}) {
     return function gulpMedia() {
         return gulp
             .src(paths.media + '/**/*')
@@ -13,5 +13,3 @@ function makeMediaTask({paths, media, imageminPlugins, browsersync}) {
             .pipe(browsersync.stream())
     }
 }
-
-module.exports = makeMediaTask

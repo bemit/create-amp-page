@@ -1,9 +1,8 @@
-'use strict'
-const fs = require('fs')
-const gulpData = require('gulp-data')
-const frontmatter = require('front-matter')
+import fs from 'fs'
+import gulpData from 'gulp-data'
+import frontmatter from 'front-matter'
 
-const handleData = (
+export const handleData = (
     data = {},
     customMerge,
     jsonContent,
@@ -36,12 +35,12 @@ const handleData = (
 
     return data
 }
-exports.handleData = handleData
 
-exports.twigDataHandler = function twigDataHandler({data = {}, customMerge, json, fm, fmMap}) {
-    return gulpData(function(file) {
+export function twigDataHandler({data = {}, customMerge, json, fm, fmMap}) {
+    return gulpData(function(file, cb) {
         let jsonContent
         if(json) {
+            // todo: support async `json` fetch function
             const jsonFile = json(file.path)
             if(typeof jsonFile !== 'undefined') {
                 jsonContent = JSON.parse(fs.readFileSync(jsonFile).toString())
@@ -50,11 +49,15 @@ exports.twigDataHandler = function twigDataHandler({data = {}, customMerge, json
 
         let fmContent
         if(fm && fmMap) {
+            // todo: support async `fm` fetch function
             const fmFile = fm(file.path)
             if(typeof fmFile !== 'undefined') {
                 fmContent = fs.readFileSync(fmFile).toString()
             }
         }
-        return handleData(data, customMerge, jsonContent, fmContent, fmMap, file)
+        // todo: add here or afterwards an optional `cb` to do something with the full merged page, additionally to any template rendering / beforehand?
+        //       like a special `render page` flow, where in the end the template get's rendered, but also it is possible to mangle the template
+        //       check if it could be build with `subpipe`
+        cb(undefined, handleData(data, customMerge, jsonContent, fmContent, fmMap, file))
     })
 }

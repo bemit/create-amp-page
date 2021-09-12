@@ -1,3 +1,2 @@
-exports.ampCreator = require('./ampCreator')
-exports.getOptions = require('./AmpCreatorOptions')
-exports.gulp = require('gulp')
+export * from './ampCreator.js'
+export * from './AmpCreatorOptions.js'

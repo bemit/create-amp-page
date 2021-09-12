@@ -1,18 +1,19 @@
-const {imageSize} = require('image-size')
-const path = require('path')
-const gulp = require('gulp')
-const logger = require('gulplog')
-const crypto = require('crypto')
-const fs = require('fs')
-const through2 = require('through2')
-const gulpRename = require('gulp-rename')
-const mediaOptimizer = require('../mediaTask/mediaOptimizer')
+import {imageSize} from 'image-size'
+import path from 'path'
+import gulp from 'gulp'
+import logger from 'gulplog'
+import crypto from 'crypto'
+import fs from 'fs'
+import through2 from 'through2'
+import gulpRename from 'gulp-rename'
+import {mediaOptimizer} from '../mediaTask/mediaOptimizer.js'
+import sharp from 'sharp'
 
 const getRelativeMediaPath = (src, distMedia) => src.replace(new RegExp(distMedia, 'i'), '')
 
 const containsRelativeSize = (size) => size.indexOf('%') !== -1 || size.indexOf('vw') !== -1
 
-const {resizeUsedImages, getImage, clearGetMediaCache} = (() => {
+export const {resizeUsedImages, getImage, clearGetMediaCache} = (() => {
     const imageRefs = {current: {}}
 
     const clearGetMediaCache = function clearGetMediaCache(done) {
@@ -75,7 +76,6 @@ const {resizeUsedImages, getImage, clearGetMediaCache} = (() => {
         },
     })
 
-    const sharp = require('sharp')
     // not a twig function but used directly here to resize images after content processing
     const resizeUsedImages = ({media, dist, distMedia, imageminPlugins}) => function resizeUsedImages(done) {
         const resizer = []
@@ -99,7 +99,7 @@ const {resizeUsedImages, getImage, clearGetMediaCache} = (() => {
                         }
 
                         const srcPath = path.join(media, getRelativeMediaPath(img.src, distMedia))
-                        const distFileName = addImageSuffix(getRelativeMediaPath(img.src, distMedia), suffix)
+                        const distFileName = addImageSuffixFn(getRelativeMediaPath(img.src, distMedia), suffix)
                         const distPath = path.join(dist, distMedia, distFileName)
                         if(fs.existsSync(distPath)) {
                             logger.info('File exists skipped: ' + distPath)
@@ -173,12 +173,8 @@ const {resizeUsedImages, getImage, clearGetMediaCache} = (() => {
     return {resizeUsedImages, getImage, clearGetMediaCache}
 })()
 
-exports.resizeUsedImages = resizeUsedImages
-exports.getImage = getImage
-exports.clearGetMediaCache = clearGetMediaCache
-
 // todo: rename to better `domain` function for adding size suffix
-const addImageSuffix = (src = '', suffix = '') => {
+const addImageSuffixFn = (src = '', suffix = '') => {
     const lowerSrc = src.toLowerCase()
     const exts = ['.jpg', '.jpeg', '.png']
     // `.svg` must not be suffixed with `width` (as always relative), so here it is ignored in general
@@ -190,7 +186,8 @@ const addImageSuffix = (src = '', suffix = '') => {
     })
     return src
 }
-exports.addImageSuffix = {
+
+export const addImageSuffix = {
     name: 'addImageSuffix',
-    func: addImageSuffix,
+    func: addImageSuffixFn,
 }

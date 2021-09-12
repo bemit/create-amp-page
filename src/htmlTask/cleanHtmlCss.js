@@ -1,9 +1,9 @@
-const through2 = require('through2')
-const {comb} = require('email-comb')
-const {minify: htmlmin} = require('html-minifier')
-const logger = require('gulplog')
+import {comb} from 'email-comb'
+import through2 from 'through2'
+import {minify as htmlmin} from 'html-minifier'
+import logger from 'gulplog'
 
-exports.cleanHtmlCss = function({cleanInlineCSS, cleanInlineCSSWhitelist = [], minifyHtml}) {
+export function cleanHtmlCss({cleanInlineCSS, cleanInlineCSSWhitelist = [], minifyHtml}) {
     return through2.obj(async (file, _, cb) => {
         let startHtmlCSSSize = null
         if((cleanInlineCSS || minifyHtml) && file.isBuffer()) {

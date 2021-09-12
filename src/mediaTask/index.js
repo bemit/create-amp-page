@@ -1,1 +1,1 @@
-exports.makeMediaTask = require('./mediaTask')
+export * from './mediaTask.js'

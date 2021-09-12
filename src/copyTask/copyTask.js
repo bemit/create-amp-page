@@ -1,8 +1,7 @@
-const gulp = require('gulp')
+import gulp from 'gulp'
+import gulpCopy from 'gulp-copy'
 
-function makeCopyTask({copyPaths, dist, browsersync}) {
-    const gulpCopy = require('gulp-copy')
-
+export function makeCopyTask({copyPaths, dist, browsersync}) {
     function makeCopyTasks(copyInfo) {
         return function copy() {
             return gulp
@@ -36,5 +35,3 @@ function makeCopyTask({copyPaths, dist, browsersync}) {
             [],
     }
 }
-
-module.exports = makeCopyTask

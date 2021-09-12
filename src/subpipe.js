@@ -1,7 +1,6 @@
-'use strict'
-const through2 = require('through2')
+import through2 from 'through2'
 // needed for "typing"
-const stream = require('stream')
+import stream from 'stream'
 
 /**
  * This `subpipe` code was based upon https://github.com/jrop/subpipe
@@ -16,7 +15,7 @@ const stream = require('stream')
  * @param {Function[]|boolean[]|boolean|Function} conditions only when true / all eval to true, the subpipe is applied
  * @return {NodeJS.ReadWriteStream}
  */
-exports.subpipe = function subpipe(streamPiper, conditions = []) {
+export function subpipe(streamPiper, conditions = []) {
     const head = through2.obj(function(f, enc, done) {
         done(null, f)
     })

@@ -1,21 +1,28 @@
-'use strict'
 // General
-const gulp = require('gulp')
-const del = require('del')
+import gulp from 'gulp'
+import del from 'del'
 // create-amp-page internals
-const {getOptions} = require('./AmpCreatorOptions')
+import {getOptions} from './AmpCreatorOptions.js'
 // Static Server
-const browsersync = require('browser-sync').create()
-const historyApiFallback = require('connect-history-api-fallback')
+import browsersyncCreator from 'browser-sync'
+import historyApiFallback from 'connect-history-api-fallback'
 // task factories
-const {makeHtmlTask} = require('./htmlTask')
-const {makeMediaTask} = require('./mediaTask')
-const {makeCssTask} = require('./cssTask')
-const {makeCopyTask} = require('./copyTask')
+import {makeHtmlTask} from './htmlTask/index.js'
+import {makeMediaTask} from './mediaTask/index.js'
+import {makeCssTask} from './cssTask/index.js'
+import {makeCopyTask} from './copyTask/index.js'
+import {clearGetMediaCache} from './htmlTask/twigFnMedia.js'
+
+const browsersync = browsersyncCreator.create()
 
 const {series, parallel} = gulp
 
-module.exports = function(options, wrap) {
+export function ampCreator(options, setup, wrap) {
+    options = getOptions(options)
+
+    if(setup) {
+        options = setup(options)
+    }
 
     const {
         paths,
@@ -36,7 +43,7 @@ module.exports = function(options, wrap) {
         // watch
         watchFolders,
         watchOptions,
-    } = getOptions(options)
+    } = options
 
     function browserSyncSetup(done) {
         browsersync.init({
@@ -86,7 +93,7 @@ module.exports = function(options, wrap) {
         )
         gulp.watch(
             [paths.html + '/**/*.twig', ...watchFolders.twig], watchOptions,
-            series(require('./htmlTask/twigFnMedia').clearGetMediaCache, gulpHtml),
+            series(clearGetMediaCache, gulpHtml),
         )
         gulp.watch(
             [paths.media + '/**/*', ...watchFolders.media], watchOptions, gulpMedia,
@@ -113,10 +120,8 @@ module.exports = function(options, wrap) {
     )
 
     const tasks = {
-        // deprecated: images task will be renamed in the future to `media`
         css: gulpCss,
         html: gulpHtml,
-        images: gulpMedia,
         media: gulpMedia,
         clean,
         build,

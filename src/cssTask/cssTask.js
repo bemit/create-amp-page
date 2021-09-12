@@ -1,22 +1,26 @@
-const path = require('path')
-const {series, parallel, ...gulp} = require('gulp')
-const logger = require('gulplog')
-const colors = require('colors/safe')
-const {subpipe} = require('../subpipe')
+import path from 'path'
+import gulpBase from 'gulp'
+import logger from 'gulplog'
+import colors from 'colors/safe.js'
+import {subpipe} from '../subpipe.js'
+import autoprefixer from 'autoprefixer'
+import postcssImport from 'postcss-import'
+import cssnano from 'cssnano'
+import postcss from 'gulp-postcss'
+import sass from 'gulp-sass'
+import nodeSass from 'node-sass'
+import tildeImporter from 'node-sass-tilde-importer'
+import replace from 'gulp-replace'
+import plumber from 'gulp-plumber'
 
-function cssHandler(
+const {parallel, series, ...gulp} = gulpBase
+
+const sassCompiler = sass(nodeSass)
+
+export function cssHandler(
     done, outputStyle = 'nested', options = {},
     postImport = true, postPrefix = true, postNano = true,
 ) {
-    const autoprefixer = require('autoprefixer')
-    const postcssImport = require('postcss-import')
-    const cssnano = require('cssnano')
-    const postcss = require('gulp-postcss')
-    const sass = require('gulp-sass')
-    const tildeImporter = require('node-sass-tilde-importer')
-    const replace = require('gulp-replace')
-    const plumber = require('gulp-plumber')
-
     return subpipe((stream) => {
         return stream.pipe(plumber({
                 errorHandler: function(error) {
@@ -25,7 +29,7 @@ function cssHandler(
                     done()
                 },
             }))
-            .pipe(sass({
+            .pipe(sassCompiler({
                 outputStyle: outputStyle,
                 importer: tildeImporter,
                 ...options,
@@ -39,9 +43,7 @@ function cssHandler(
     })
 }
 
-exports.cssHandler = cssHandler
-
-function makeCssTask(paths, browsersync, outputStyle, options) {
+export function makeCssTask(paths, browsersync, outputStyle, options) {
     return function gulpCss(done) {
         return gulp
             .src(paths.styles + '/**/*.{scss,sass}')
@@ -50,5 +52,3 @@ function makeCssTask(paths, browsersync, outputStyle, options) {
             .pipe(browsersync.stream())
     }
 }
-
-exports.makeCssTask = makeCssTask
