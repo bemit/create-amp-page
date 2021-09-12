@@ -4,7 +4,7 @@ Fast development of fast pages.
 
 [![npm (scoped)](https://img.shields.io/npm/v/create-amp-page?style=flat-square)](https://www.npmjs.com/package/create-amp-page)
 [![npm (scoped)](https://img.shields.io/npm/dm/create-amp-page.svg?style=flat-square)](https://npmcharts.com/compare/create-amp-page?interval=30)
-[![Travis (.com) master build](https://img.shields.io/travis/com/bemit/create-amp-page/master?style=flat-square)](https://travis-ci.com/bemit/create-amp-page)
+[![Travis (.com) master build](https://img.shields.io/travis/com/bemit/create-amp-page/master?style=flat-square)](https://travis-ci.com/github/bemit/create-amp-page)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
 ![Typed](https://flat.badgen.net/badge/icon/Typed?icon=typescript&label&labelColor=blue&color=555555)
 
