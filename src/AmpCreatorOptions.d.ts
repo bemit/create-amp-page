@@ -112,7 +112,10 @@ export interface AmpCreatorOptions {
         logicLoader?: () => {
             functions?: TwigFunction[]
             filters?: TwigFunction[]
-        }
+        } | Promise<{
+            functions?: TwigFunction[]
+            filters?: TwigFunction[]
+        }>
         // output file extension including the '.' like path.extname(filename). Use true to keep source extname and a "falsy" value to drop the file extension
         outputExtname?: string | boolean
         // enables debug info logging

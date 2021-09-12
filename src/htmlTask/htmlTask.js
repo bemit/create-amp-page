@@ -30,14 +30,14 @@ export const makeTwigHandler = ({
         addImageSuffix,
     ]
 
-    return () => subpipe((stream) => {
+    return async () => {
         // share twig logic for `twig-as-entrypoint` and `frontmatter-as-entrypoint` (collections)
         const extraLogic = {
             functions: undefined,
             filters: undefined,
         }
         if(twig.logicLoader) {
-            const logic = twig.logicLoader()
+            const logic = await twig.logicLoader()
             if(logic.functions) {
                 extraLogic.functions = logic.functions
             }
@@ -45,39 +45,41 @@ export const makeTwigHandler = ({
                 extraLogic.filters = logic.filters
             }
         }
-        return stream
-            .pipe(twigGulp({
-                base: paths.html,
-                extend: twig && twig.extend,
-                functions: [
-                    ...extendedTwigFunctions,
-                    ...(twig && twig.functions ? twig.functions : []),
-                    ...(extraLogic.functions || []),
-                ],
-                filters: [
-                    ...(twig && twig.filters ? twig.filters : []),
-                    ...(extraLogic.filters || []),
-                ],
-                extname: twig && typeof twig.outputExtname !== 'undefined' ? twig.outputExtname : '.html',
-                cache: !!(twig && twig.cache),
-                debug: !!(twig && twig.debug),
-                trace: !!(twig && twig.trace),
-            }))
-            // middlewares after twig compilation
-            // middlewares for style injection
-            .pipe(injectCSS({
-                paths, injectTag: cssInjectTag,
-                failOnSize: process.env.NODE_ENV === 'production',
-                cssBuffer: cssBuffer,
-            }))
-            // middlewares after CSS injection
-            .pipe(cleanHtmlCss({
-                minifyHtml,
-                cleanInlineCSS,
-                cleanInlineCSSWhitelist,
-            }))
-            .pipe(ampOptimizer(ampOptimize))
-    })
+        return subpipe((stream) =>
+            stream
+                .pipe(twigGulp({
+                    base: paths.html,
+                    extend: twig && twig.extend,
+                    functions: [
+                        ...extendedTwigFunctions,
+                        ...(twig && twig.functions ? twig.functions : []),
+                        ...(extraLogic.functions || []),
+                    ],
+                    filters: [
+                        ...(twig && twig.filters ? twig.filters : []),
+                        ...(extraLogic.filters || []),
+                    ],
+                    extname: twig && typeof twig.outputExtname !== 'undefined' ? twig.outputExtname : '.html',
+                    cache: Boolean(twig && twig.cache),
+                    debug: Boolean(twig && twig.debug),
+                    trace: Boolean(twig && twig.trace),
+                }))
+                // middlewares after twig compilation
+                // middlewares for style injection
+                .pipe(injectCSS({
+                    paths, injectTag: cssInjectTag,
+                    failOnSize: process.env.NODE_ENV === 'production',
+                    cssBuffer: cssBuffer,
+                }))
+                // middlewares after CSS injection
+                .pipe(cleanHtmlCss({
+                    minifyHtml,
+                    cleanInlineCSS,
+                    cleanInlineCSSWhitelist,
+                }))
+                .pipe(ampOptimizer(ampOptimize)),
+        )
+    }
 }
 
 export const makeHtmlTask = (
@@ -94,31 +96,41 @@ export const makeHtmlTask = (
     const htmlTasks = []
 
     const twigHandler = makeTwigHandler({paths, twig, ...options})
-    htmlTasks.push(function pagesByTemplates() {
-        return gulp.src(paths.htmlPages + '/*.twig')
-            .pipe(twigDataHandler(twig))
-            .pipe(twigHandler())
-            .pipe(gulp.dest(paths.dist))
-            .pipe(browsersync.stream())
-    })
+    htmlTasks.push(
+        function pagesByTemplates() {
+            return new Promise(async (resolve, reject) => {
+                gulp.src(paths.htmlPages + '/*.twig')
+                    .pipe(twigDataHandler(twig))
+                    .pipe(await twigHandler())
+                    .pipe(gulp.dest(paths.dist))
+                    .pipe(browsersync.stream())
+                    .on('finish', resolve)
+                    .on('error', reject)
+            })
+        },
+    )
 
     if(collections && Array.isArray(collections)) {
         collections.forEach(collection => {
             htmlTasks.push(
                 function pagesByFrontmatter() {
-                    return gulp.src(collection.data)
-                        .pipe(twigMultiLoad(
-                            {
-                                ...twig,
-                                ...(collection.fmMap ? {fmMap: collection.fmMap} : {}),
-                                ...(collection.customMerge ? {customMerge: collection.customMerge} : {}),
-                            },
-                            collection.tpl,
-                        ))
-                        .pipe(twigHandler())
-                        .pipe(twigMultiSave(collection.ext))
-                        .pipe(gulp.dest(path.join(paths.dist, collection.base)))
-                        .pipe(browsersync.stream())
+                    return new Promise(async (resolve, reject) => {
+                        gulp.src(collection.data)
+                            .pipe(twigMultiLoad(
+                                {
+                                    ...twig,
+                                    ...(collection.fmMap ? {fmMap: collection.fmMap} : {}),
+                                    ...(collection.customMerge ? {customMerge: collection.customMerge} : {}),
+                                },
+                                collection.tpl,
+                            ))
+                            .pipe(await twigHandler())
+                            .pipe(twigMultiSave(collection.ext))
+                            .pipe(gulp.dest(path.join(paths.dist, collection.base)))
+                            .pipe(browsersync.stream())
+                            .on('finish', resolve)
+                            .on('error', reject)
+                    })
                 },
             )
         })

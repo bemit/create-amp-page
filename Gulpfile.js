@@ -39,6 +39,9 @@ const tasks = ampCreator({
                 canonical: 'http://localhost:4488/' + file.relative,
             },
         }),
+        logicLoader: async () => {
+            return {}
+        },
     },
     prettyUrlExtensions: ['html'],
 })
