@@ -12,8 +12,12 @@ export function mediaOptimizer(media, imageminPlugins) {
         imageminSvgo(media && media.svg ? media.svg : {
             plugins: [
                 {
-                    removeViewBox: false,
-                    collapseGroups: true,
+                    name: 'removeViewBox',
+                    active: false,
+                },
+                {
+                    name: 'collapseGroups',
+                    active: true,
                 },
             ],
         }),
