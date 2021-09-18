@@ -1,3 +1,5 @@
+import g from 'gulp'
+
 export * from './ampCreator.js'
 export * from './AmpCreatorOptions.js'
-export * from 'gulp'
+export const gulp = g
