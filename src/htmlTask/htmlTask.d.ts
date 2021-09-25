@@ -13,7 +13,7 @@ export interface MakeTwigHandlerConfig {
     cssBuffer?: stream.Transform
 }
 
-export function makeTwigHandler(config: MakeTwigHandlerConfig): () => NodeJS.ReadWriteStream
+export function makeTwigHandler(config: MakeTwigHandlerConfig): () => Promise<() => NodeJS.ReadWriteStream>
 
 export interface MakeHtmlTaskConfig extends MakeTwigHandlerConfig {
     twig: AmpCreatorOptions['twig']
