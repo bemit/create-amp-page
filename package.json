@@ -1,6 +1,6 @@
 {
     "name": "create-amp-page",
-    "version": "1.0.0-alpha.5",
+    "version": "1.0.0-alpha.6",
     "license": "MIT",
     "homepage": "https://github.com/bemit/create-amp-page",
     "author": "Michael Becker <https://mlbr.xyz>",
@@ -31,7 +31,8 @@
         "tasks": "gulp --tasks",
         "gulp": "gulp",
         "start": "cross-env NODE_ENV=development gulp watch",
-        "build": "mkdirp build && cp -r src/* build/ && cp package.json build/ && cp package-lock.json build/ && cp README.md build/ && cp LICENSE.md build/",
+        "prebuild": "rimraf build && mkdirp build",
+        "build": "cp -r src/* build/ && cp package.json build/ && cp package-lock.json build/ && cp README.md build/ && cp LICENSE.md build/",
         "build-example": "cross-env NODE_ENV=production gulp build",
         "clean": "gulp clean"
     },

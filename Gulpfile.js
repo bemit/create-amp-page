@@ -18,7 +18,7 @@ const tasks = ampCreator({
     collections: [{
         data: 'example/data/blog/*.md',
         tpl: 'example/html/blog.twig',
-        base: 'blog/',
+        base: 'blog',
     }],
     ampOptimize: process.env.NODE_ENV === 'production',
     // minifyHtml: false,
@@ -27,8 +27,8 @@ const tasks = ampCreator({
     // cssInjectTag: '<style>',
     twig: {
         data: {ampEnabled: true},
-        fm: (file) => './example/data/' + path.basename(file).replace('.twig', '') + '.md',
-        fmMap: (data, file) => ({
+        fm: (file) => 'example/data/' + path.basename(file).replace('.twig', '') + '.md',
+        fmMap: (data, files) => ({
             head: {
                 title: data.attributes.title,
                 description: data.attributes.description,
@@ -36,7 +36,10 @@ const tasks = ampCreator({
             },
             content: data.body,
             links: {
-                canonical: 'http://localhost:4488/' + file.relative,
+                canonical: 'http://localhost:4488/' +
+                    files.base.replace('\\', '/') +
+                    path.basename(files.isCollection ? files.pathFm : files.tpl)
+                        .replace('.twig', '').replace('.md', ''),
             },
         }),
         logicLoader: async () => {

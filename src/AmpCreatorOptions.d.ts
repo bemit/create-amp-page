@@ -1,8 +1,26 @@
 import { extendFilter, extendFunction, extendTest, extendTag } from 'twig'
 
+export type FmMapFiles = {
+    // the `tpl` file path
+    tpl: string
+    relative?: boolean
+    base?: string
+    cwd: string
+    // the `front-matter` file path
+    pathFm?: string
+    // the `.json` file path
+    pathData?: string
+    isCollection?: boolean
+}
+
 export type fmMap = (
-    data: { attributes: Object, body: string, bodyBegin: number, frontmatter: string },
-    file: { path: string, relative: string, base: string, cwd: string, pathData?: string }
+    data: {
+        attributes: Object
+        body: string
+        bodyBegin: number
+        frontmatter: string
+    },
+    mappedFiles: FmMapFiles
 ) => Object
 export type customMerge = (data1: Object, data2: Object) => Object
 
@@ -33,7 +51,7 @@ export interface AmpCreatorOptions {
         stylesInject?: string
         // root folder of .twig templates
         html: string
-        // root folder of templates that will be used as pages
+        // root folder of templates that will be used as pages (one page per .twig file)
         htmlPages: string
         // root folder of media files that should be processed
         media: string
@@ -50,20 +68,29 @@ export interface AmpCreatorOptions {
         historyFallback?: string
     },
 
-    // generate pages by frontmatter, use one template for multiple input data files
+    // generate pages by frontmatter (using e.g. one page per .md file in `data` folder), uses one template for multiple input data files
     collections?: {
-        // path to content directory, is passed to `gulp.src`
+        // path to content directory with `*` placeholder for file, is passed to `gulp.src`, supports any file [`front-matter`](https://www.npmjs.com/package/front-matter) supports
         data: string
         // path to the single template that will be used
         tpl: string
         // relative base to dist
         base: string
+        // receives the absolute path to the `frontmatter` file, optional
+        // must return path to JSON file to use as data for this template
+        // for "file does not exist" without an error return `undefined`
+        json?: (file: string) => string | undefined
+        jsonFailOnMissing?: boolean
+        // the loader is executed when `json` result is a `string`, receives the result of `json`
+        jsonLoader?: (file: string) => Promise<any | undefined>
         // overwrite global `fmMap` for this collection
         fmMap?: fmMap
         // overwrite global `customMerge` for this collection
         customMerge?: customMerge
         // used extension, needed for file handling, defaults to `.md`
         ext?: string
+        // used output extension, needed for file saving, defaults to `.html`
+        extOut?: string
     }[]
 
     // which extensions should be removed for prettier URLs, like `/contact` instead of `/contact.html`
@@ -80,6 +107,9 @@ export interface AmpCreatorOptions {
         // must return path to JSON file to use as data for this template
         // for "file does not exist" without an error return `undefined`
         json?: (file: string) => string | undefined
+        jsonFailOnMissing?: boolean
+        // the loader is executed when `json` result is a `string`, receives the result of `json`
+        jsonLoader?: (file: string) => Promise<any | undefined>
         // receives the absolute path to the template file, optional
         // must return path to front-matter file
         // for "file does not exist" without an error return `undefined`

@@ -195,7 +195,7 @@ This project is free software distributed under the **MIT License**.
 
 See: [LICENSE](LICENSE).
 
-© 2021 [Michael Becker](https://mlbr.xyz)
+© 2022 [Michael Becker](https://mlbr.xyz)
 
 ### Versions
 
