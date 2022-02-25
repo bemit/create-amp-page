@@ -74,31 +74,51 @@ export const loadJsonData = async (json, path, loader, failOnMissing = false) =>
     return {jsonContent, jsonFile}
 }
 
-export function twigDataHandler({data = {}, customMerge, json, jsonLoader, jsonFailOnMissing, fm, fmMap}) {
+export function twigDataHandler(
+    {data = {}, customMerge, fmMap},
+    collection,
+) {
+    const {
+        fm, base, pageId,
+        json, jsonLoader, jsonFailOnMissing,
+        ...r
+    } = collection
     return gulpData(async (file, cb) => {
         const {jsonContent, jsonFile} = await loadJsonData(json, file.path, jsonLoader, jsonFailOnMissing)
 
         let fmContent
         let fmFile
         if(fm && fmMap) {
-            // todo: support async `fm` fetch function
             fmFile = fm(file.path)
             if(typeof fmFile !== 'undefined') {
+                // todo: support async `fm` fetch function
                 fmContent = fs.readFileSync(fmFile).toString()
             }
         }
-        const fmMapFiles = {
+        const mappedFiles = {
+            ...r,
             tpl: file.path,
-            //relative: string,
-            base: '',
             cwd: file.cwd,
             pathData: jsonFile,
             pathFm: fmFile,
-            isCollection: false,
+            base: base,
+            pageId: pageId,
         }
         // todo: add here or afterwards an optional `cb` to do something with the full merged page, additionally to any template rendering / beforehand?
         //       like a special `render page` flow, where in the end the template get's rendered, but also it is possible to mangle the template
         //       check if it could be build with `subpipe`
-        cb(undefined, handleData(data, customMerge, jsonContent, fmContent, fmMap, fmMapFiles))
+        try {
+            cb(
+                undefined,
+                handleData(
+                    data, customMerge, jsonContent,
+                    fmContent,
+                    fmMap,
+                    mappedFiles,
+                ),
+            )
+        } catch(e) {
+            cb(e)
+        }
     })
 }

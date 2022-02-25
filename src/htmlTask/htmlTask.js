@@ -96,45 +96,57 @@ export const makeHtmlTask = (
     const htmlTasks = []
 
     const twigHandler = makeTwigHandler({paths, twig, ...options})
-    htmlTasks.push(
-        function pagesByTemplates() {
-            return new Promise(async (resolve, reject) => {
-                gulp.src(paths.htmlPages + '/*.twig')
-                    .pipe(twigDataHandler(twig))
-                    .pipe(await twigHandler())
-                    .pipe(gulp.dest(paths.dist))
-                    .pipe(browsersync.stream())
-                    .on('finish', resolve)
-                    .on('error', reject)
-            })
-        },
-    )
 
     if(collections && Array.isArray(collections)) {
-        collections.forEach(({data, fmMap, customMerge, ...collection}) => {
+        collections.forEach(({fmMap, customMerge, ...collection}) => {
             const cwd = process.cwd()
-            htmlTasks.push(
-                function pagesByFrontmatter() {
-                    return new Promise(async (resolve, reject) => {
-                        // todo: add support for different loaders, incl. async
-                        gulp.src(data)
-                            .pipe(twigMultiLoad(
-                                {
-                                    ...twig,
-                                    ...(fmMap ? {fmMap: fmMap} : {}),
-                                    ...(customMerge ? {customMerge: customMerge} : {}),
-                                },
-                                collection,
-                            ))
-                            .pipe(await twigHandler())
-                            .pipe(twigMultiSave(collection.ext, collection.extOut))
-                            .pipe(gulp.dest(path.join(paths.dist, collection.base), {cwd: cwd}))
-                            .pipe(browsersync.stream())
-                            .on('finish', resolve)
-                            .on('error', reject)
-                    })
-                },
-            )
+            if(collection.pagesByTpl) {
+                htmlTasks.push(
+                    function pagesByTemplates() {
+                        return new Promise(async (resolve, reject) => {
+                            gulp.src(collection.tpl)
+                                .pipe(
+                                    twigDataHandler(
+                                        {
+                                            ...twig,
+                                            ...(fmMap ? {fmMap: fmMap} : {}),
+                                            ...(customMerge ? {customMerge: customMerge} : {}),
+                                        },
+                                        collection,
+                                    ),
+                                )
+                                .pipe(await twigHandler())
+                                .pipe(gulp.dest(paths.dist))
+                                .pipe(browsersync.stream())
+                                .on('finish', resolve)
+                                .on('error', reject)
+                        })
+                    },
+                )
+            } else {
+                htmlTasks.push(
+                    function pagesByFrontmatter() {
+                        return new Promise(async (resolve, reject) => {
+                            // todo: add support for different loaders, incl. async
+                            gulp.src(collection.fm)
+                                .pipe(twigMultiLoad(
+                                    {
+                                        ...twig,
+                                        ...(fmMap ? {fmMap: fmMap} : {}),
+                                        ...(customMerge ? {customMerge: customMerge} : {}),
+                                    },
+                                    collection,
+                                ))
+                                .pipe(await twigHandler())
+                                .pipe(twigMultiSave(collection.ext, collection.extOut))
+                                .pipe(gulp.dest(path.join(paths.dist, collection.base), {cwd: cwd}))
+                                .pipe(browsersync.stream())
+                                .on('finish', resolve)
+                                .on('error', reject)
+                        })
+                    },
+                )
+            }
         })
     }
 

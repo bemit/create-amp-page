@@ -117,7 +117,7 @@ export const {resizeUsedImages, getImage, clearGetMediaCache} = (() => {
                                     }
                                 })
                                 .src(srcPath)
-                                .pipe(through2.obj(async (file, _, cb) => {
+                                .pipe(through2.obj((file, _, cb) => {
                                     if(file.isBuffer()) {
                                         sharp(file.contents)
                                             .resize(width, height)

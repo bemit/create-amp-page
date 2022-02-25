@@ -3,14 +3,15 @@ import { extendFilter, extendFunction, extendTest, extendTag } from 'twig'
 export type FmMapFiles = {
     // the `tpl` file path
     tpl: string
-    relative?: boolean
+    // if the content is created by the template
+    pagesByTpl?: boolean
     base?: string
     cwd: string
     // the `front-matter` file path
     pathFm?: string
     // the `.json` file path
     pathData?: string
-    isCollection?: boolean
+    pageId?: string
 }
 
 export type fmMap = (
@@ -52,7 +53,7 @@ export interface AmpCreatorOptions {
         // root folder of .twig templates
         html: string
         // root folder of templates that will be used as pages (one page per .twig file)
-        htmlPages: string
+        //htmlPages: string
         // root folder of media files that should be processed
         media: string
         // folders / glob that should be copied into dist
@@ -71,9 +72,13 @@ export interface AmpCreatorOptions {
     // generate pages by frontmatter (using e.g. one page per .md file in `data` folder), uses one template for multiple input data files
     collections?: {
         // path to content directory with `*` placeholder for file, is passed to `gulp.src`, supports any file [`front-matter`](https://www.npmjs.com/package/front-matter) supports
-        data: string
+        // OR when `pagesByTpl=true`:
+        // receives the absolute path to the template file, must return path to front-matter file, for "file does not exist" without an error return `undefined`
+        fm: string | (((file: string) => string | undefined) | undefined)
         // path to the single template that will be used
         tpl: string
+        // if the `tpl` path should be used to build the data paths, then `data` is used as relative prefix for the tpl-file names
+        pagesByTpl?: boolean
         // relative base to dist
         base: string
         // receives the absolute path to the `frontmatter` file, optional
@@ -91,6 +96,8 @@ export interface AmpCreatorOptions {
         ext?: string
         // used output extension, needed for file saving, defaults to `.html`
         extOut?: string
+        // can be used for e.g. multi page routing
+        pageId?: string
     }[]
 
     // which extensions should be removed for prettier URLs, like `/contact` instead of `/contact.html`
@@ -103,17 +110,6 @@ export interface AmpCreatorOptions {
     twig?: {
         // data passed globally to the twig templates, optional
         data?: { [key: string]: any }
-        // receives the absolute path to the template file, optional
-        // must return path to JSON file to use as data for this template
-        // for "file does not exist" without an error return `undefined`
-        json?: (file: string) => string | undefined
-        jsonFailOnMissing?: boolean
-        // the loader is executed when `json` result is a `string`, receives the result of `json`
-        jsonLoader?: (file: string) => Promise<any | undefined>
-        // receives the absolute path to the template file, optional
-        // must return path to front-matter file
-        // for "file does not exist" without an error return `undefined`
-        fm?: (file: string) => string | undefined
         // receives the front matter and absolute path, for mapping to template values;
         // required when `fm` exists, otherwise not used
         fmMap?: fmMap

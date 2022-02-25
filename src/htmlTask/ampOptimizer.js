@@ -9,13 +9,17 @@ export function ampOptimizer(doOptimize) {
         ampOptimizerRef.current = AmpOptimizer.create(typeof doOptimize === 'object' ? doOptimize : undefined)
     }
     return through2.obj(async (file, _, cb) => {
-        if(doOptimize && file.isBuffer()) {
-            const optimizedHtml = await ampOptimizerLib.transformHtml(
-                file.contents.toString(),
-                {},
-            )
-            file.contents = Buffer.from(optimizedHtml)
+        try {
+            if(doOptimize && file.isBuffer()) {
+                const optimizedHtml = await ampOptimizerLib.transformHtml(
+                    file.contents.toString(),
+                    {},
+                )
+                file.contents = Buffer.from(optimizedHtml)
+            }
+            cb(null, file)
+        } catch(e) {
+            cb(e)
         }
-        cb(null, file)
     })
 }
