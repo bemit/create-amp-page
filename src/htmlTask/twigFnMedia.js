@@ -30,9 +30,18 @@ export const {resizeUsedImages, getImage, clearGetMediaCache} = (() => {
                 let dimensions = {width: 0, height: 0}
                 let hash
                 try {
+                    if(src.indexOf('//') !== -1) {
+                        // absolute src, can not be handled
+                        return undefined
+                    }
                     const srcPath = path.join(mediaPath, getRelativeMediaPath(src, distMedia))
                     dimensions = imageSize(srcPath)
-                    hash = crypto.createHash('sha1').update(fs.readFileSync(srcPath)).digest('base64')
+                    try {
+                        const fileData = fs.readFileSync(srcPath)
+                        hash = crypto.createHash('sha1').update(fileData).digest('base64')
+                    } catch(e) {
+                        throw e
+                    }
                 } catch(e) {
                     if(process.env.NODE_ENV !== 'production') {
                         console.warn('getImage', e)
@@ -117,7 +126,7 @@ export const {resizeUsedImages, getImage, clearGetMediaCache} = (() => {
                                     }
                                 })
                                 .src(srcPath)
-                                .pipe(through2.obj((file, _, cb) => {
+                                .pipe(through2.obj(async(file, _, cb) => {
                                     if(file.isBuffer()) {
                                         sharp(file.contents)
                                             .resize(width, height)

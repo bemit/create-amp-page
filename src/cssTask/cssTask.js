@@ -46,7 +46,7 @@ export function cssHandler(
 export function makeCssTask(paths, browsersync, outputStyle, options) {
     return function gulpCss(done) {
         return gulp
-            .src(paths.styles + '/**/*.{scss,sass}')
+            .src(paths.styles + '/' + (paths.style || '**/*.{scss,sass}'))
             .pipe(cssHandler(done, outputStyle, options))
             .pipe(gulp.dest(path.join(paths.dist, paths.distStyles)))
             .pipe(browsersync.stream())

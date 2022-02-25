@@ -39,35 +39,45 @@ export interface TwigFunction {
     func: Function
 }
 
-export interface AmpCreatorOptions {
-    // yeah, the port
-    port: number
+export interface AmpCreatorOptionsPaths {
+    // folder of .scss/.sass files
+    styles: string
+    // the pattern for which files need to be build inside the `styles` folder, defaults to `'**/*.{scss,sass}'`
+    style?: string
+    // injects this stylesheet into `<style amp-custom/>`, optional
+    // relative name to style dist folder
+    stylesInject?: string
+    // root folder of .twig templates
+    html: string
+    // folders / glob that should be copied into dist
+    copy?: CopyInfo | CopyInfo[]
+    // absolute, but must begin with root `dist` folder, where everything is saved
+    dist: string
+    // relative to `dist`, where CSS files are saved
+    distStyles: string
+}
 
-    // file paths to sources and build
-    paths: {
-        // folder of .scss/.sass files
-        styles: string
-        // injects this stylesheet into `<style amp-custom/>`, optional
-        // relative name to style dist folder
-        stylesInject?: string
-        // root folder of .twig templates
-        html: string
-        // root folder of templates that will be used as pages (one page per .twig file)
-        //htmlPages: string
-        // root folder of media files that should be processed
-        media: string
-        // folders / glob that should be copied into dist
-        copy?: CopyInfo | CopyInfo[]
-        // folder where everything is served,
-        // also the root of static server
-        dist: string
-        // relative to `dist`, where media files are saved
-        distMedia: string
-        // relative to `dist`, where CSS files are saved
-        distStyles: string
-        // for SPA / PWA
-        historyFallback?: string
-    },
+export interface AmpCreatorOptions {
+    // yeah, the port, used by the main browserSync instances, for multi pages use additionally `pages.%.port`
+    port: number
+    // root folder for the dist/build folders,
+    // also the root of static server
+    dist: string
+    // for SPA / PWA
+    historyFallback?: string
+
+    // root folder of media files that should be processed
+    srcMedia: string
+    // relative to `dist`, where media files are saved
+    distMedia: string
+
+    pages?: {
+        [page: string]: {
+            // starts a new proxy on this port
+            //port?: number
+            paths: AmpCreatorOptionsPaths
+        }
+    }
 
     // generate pages by frontmatter (using e.g. one page per .md file in `data` folder), uses one template for multiple input data files
     collections?: {

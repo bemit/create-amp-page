@@ -25,7 +25,8 @@ export function ampCreator(options, setup, wrap) {
     }
 
     const {
-        paths,
+        dist,
+        historyFallback,
         // browsersync
         port, prettyUrlExtensions, serveStaticMiddleware,
         // clean
@@ -37,27 +38,57 @@ export function ampCreator(options, setup, wrap) {
         cleanInlineCSS,
         cleanInlineCSSWhitelist,
         cssInjectTag,
+        pages,
         collections,
         // media
+        srcMedia, distMedia,
         media, imageminPlugins,
         // watch
         watchFolders,
         watchOptions,
     } = options
 
+    const pageIds = Object.keys(pages)
+
+    if(pageIds.includes('media')) {
+        throw new Error('Page with id `media` found, reserved name.')
+    }
+
+    const browserSyncInstances = {}
+
     function browserSyncSetup(done) {
+        /*pageIds.forEach((pageId) => {
+            browserSyncInstances[pageId] = browsersyncCreator.create('page-' + pageId)
+            browserSyncInstances[pageId].init({
+                port: pages[pageId].port,
+                proxy: {
+                    target: 'localhost:' + port + '/' +
+                        (pages[pageId].paths.dist.indexOf(dist + '/') === 0 ? pages[pageId].paths.dist.slice((dist + '/').length) : pages[pageId].paths.dist) + '/',
+                    ws: true,
+                },
+                ui: false,
+                open: false,
+                notify: true,
+                /*proxyReq: [
+                    function(proxyReq) {
+                        proxyReq.setHeader('X-Special-Proxy-Header', 'foobar')
+                    },
+                ],
+            })
+        })*/
         browsersync.init({
             open: false,
-            notify: false,
+            notify: true,
             ghostMode: false,
+            //single: true,
             server: {
-                baseDir: paths.dist,
+                baseDir: dist,
                 serveStaticOptions: {
                     extensions: prettyUrlExtensions,
                 },
                 middleware: [
-                    ...(paths.historyFallback ? [historyApiFallback({
-                        index: paths.historyFallback,
+                    ...(historyFallback ? [historyApiFallback({
+                        index: historyFallback,
                     })] : []),
                     ...serveStaticMiddleware,
                 ],
@@ -68,42 +99,92 @@ export function ampCreator(options, setup, wrap) {
     }
 
     function clean() {
-        return del([paths.dist, ...cleanFolders])
+        return del([dist, ...cleanFolders])
     }
 
-    const gulpCss = makeCssTask(paths, browsersync)
-    const gulpHtml = makeHtmlTask({
-        paths, twig,
-        ampOptimize,
-        minifyHtml,
+    const gulpCss = parallel(
+        pageIds.filter(pageId => pages[pageId].paths.styles)
+            .map(pageId => makeCssTask(pages[pageId].paths, browsersync)),
+    )
+    const gulpHtml = parallel(
+        pageIds.filter(pageId => pages[pageId].paths.styles)
+            .map(pageId =>
+                makeHtmlTask({
+                    paths: pages[pageId].paths,
+                    srcMedia, distMedia,
+                    dist,
+                    twig,
+                    ampOptimize,
+                    minifyHtml,
+                    imageminPlugins,
+                    cleanInlineCSS,
+                    cleanInlineCSSWhitelist,
+                    cssInjectTag,
+                    collections: collections.filter(collection => collection.pageId === pageId || !collection.pageId),
+                    browsersync,
+                }),
+            ),
+    )
+    const gulpMedia = makeMediaTask({
+        paths: {
+            media: srcMedia,
+            distMedia,
+            dist: dist,
+        },
+        media,
         imageminPlugins,
-        cleanInlineCSS,
-        cleanInlineCSSWhitelist,
-        cssInjectTag,
-        collections,
         browsersync,
     })
-    const gulpMedia = makeMediaTask({paths, media, imageminPlugins, browsersync})
-    const gulpCopyTasks = makeCopyTask({copyPaths: paths.copy, dist: paths.dist, browsersync})
+    /*const gulpMedia = parallel(
+        pageIds.filter(pageId => pages[pageId].paths.media && pages[pageId].paths.distMedia)
+            .map(pageId =>
+                makeMediaTask({
+                    paths: pages[pageId].paths,
+                    media,
+                    imageminPlugins,
+                    browsersync,
+                }),
+            ),
+    )*/
+    const gulpCopyTasks =
+        pageIds.filter(pageId => pages[pageId].paths.copy)
+            .map(pageId =>
+                makeCopyTask({
+                    copyPaths: pages[pageId].paths.copy,
+                    dist: pages[pageId].paths.dist,
+                    browsersync,
+                }),
+            )
 
     function gulpWatch() {
-        gulp.watch([paths.styles + '/**/*.(scss|sass)', ...watchFolders.sass], watchOptions,
-            // only when the stylesheet should be injected, HTML must be build after CSS
-            paths.stylesInject ? series(gulpCss, gulpHtml) : gulpCss,
-        )
-        gulp.watch(
-            [paths.html + '/**/*.twig', ...watchFolders.twig], watchOptions,
-            series(clearGetMediaCache, gulpHtml),
-        )
-        gulp.watch(
-            [paths.media + '/**/*', ...watchFolders.media], watchOptions, gulpMedia,
-        )
+        pageIds.filter(pageId => pages[pageId].paths.copy)
+            .forEach(pageId => {
+                const paths = pages[pageId].paths
+                // todo: merge all watch paths from pages to one watch group per "paths.<type>", de-duplicating same for e.g. `paths.html`
 
-        gulpCopyTasks.watch(watchOptions)
+                if(paths.styles) {
+                    gulp.watch([paths.styles + '/**/*.(scss|sass)', ...watchFolders.sass], watchOptions,
+                        // only when the stylesheet should be injected, HTML must be build after CSS
+                        paths.stylesInject ? series(gulpCss, gulpHtml) : gulpCss,
+                    )
+                }
+                if(paths.html || watchFolders.twig.length > 0) {
+                    gulp.watch(
+                        [paths.html + '/**/*.twig', ...watchFolders.twig], watchOptions,
+                        series(clearGetMediaCache, gulpHtml),
+                    )
+                }
+            })
+        gulp.watch(
+            [srcMedia + '/**/*', ...watchFolders.media], watchOptions, gulpMedia,
+        )
+        gulpCopyTasks.forEach(copyTask => {
+            copyTask.watch(watchOptions)
+        })
     }
 
     const builder = parallel(
-        gulpCopyTasks.build,
+        ...gulpCopyTasks.map(copyTask => copyTask.build),
         series(
             gulpCss,
             parallel(gulpHtml, gulpMedia),

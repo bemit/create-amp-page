@@ -16,6 +16,7 @@ import {getImage, resizeUsedImages, addImageSuffix} from './twigFnMedia.js'
 const {parallel, series, ...gulp} = gulpBase
 
 export const makeTwigHandler = ({
+                                    srcMedia, distMedia,
                                     paths, twig,
                                     ampOptimize,
                                     minifyHtml,
@@ -25,7 +26,7 @@ export const makeTwigHandler = ({
                                     cssBuffer,
                                 }) => {
     const extendedTwigFunctions = [
-        getImage(paths.media, paths.distMedia),
+        getImage(srcMedia, distMedia),
         embedScript(paths.dist),
         addImageSuffix,
     ]
@@ -85,6 +86,8 @@ export const makeTwigHandler = ({
 export const makeHtmlTask = (
     {
         paths,
+        srcMedia, distMedia,
+        dist,
         twig,
         collections,
         browsersync,
@@ -95,7 +98,11 @@ export const makeHtmlTask = (
 ) => {
     const htmlTasks = []
 
-    const twigHandler = makeTwigHandler({paths, twig, ...options})
+    const twigHandler = makeTwigHandler({
+        paths, twig,
+        srcMedia, distMedia,
+        ...options,
+    })
 
     if(collections && Array.isArray(collections)) {
         collections.forEach(({fmMap, customMerge, ...collection}) => {
@@ -152,5 +159,10 @@ export const makeHtmlTask = (
 
     htmlTasks.push(...additionalHtmlTasks)
 
-    return series(parallel(htmlTasks), resizeUsedImages({...paths, imageminPlugins}))
+    return series(parallel(htmlTasks), resizeUsedImages({
+        media: srcMedia,
+        dist,
+        distMedia,
+        imageminPlugins,
+    }))
 }
