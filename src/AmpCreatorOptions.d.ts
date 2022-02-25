@@ -60,6 +60,8 @@ export interface AmpCreatorOptionsPaths {
 export interface AmpCreatorOptions {
     // yeah, the port, used by the main browserSync instances, for multi pages use additionally `pages.%.port`
     port: number
+    // if browserSync should open the server, if it is a `string`, will be used as start page
+    open?: boolean | string
     // root folder for the dist/build folders,
     // also the root of static server
     dist: string

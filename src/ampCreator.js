@@ -28,7 +28,8 @@ export function ampCreator(options, setup, wrap) {
         dist,
         historyFallback,
         // browsersync
-        port, prettyUrlExtensions, serveStaticMiddleware,
+        port, open, startPath,
+        prettyUrlExtensions, serveStaticMiddleware,
         // clean
         cleanFolders,
         // html / twig
@@ -77,9 +78,11 @@ export function ampCreator(options, setup, wrap) {
             })
         })*/
         browsersync.init({
-            open: false,
+            port: port,
+            open: !!open,
             notify: true,
             ghostMode: false,
+            startPath: typeof open === 'string' ? open : undefined,
             //single: true,
             server: {
                 baseDir: dist,
@@ -93,7 +96,6 @@ export function ampCreator(options, setup, wrap) {
                     ...serveStaticMiddleware,
                 ],
             },
-            port: port,
         })
         done()
     }
