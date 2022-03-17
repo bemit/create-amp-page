@@ -21,40 +21,101 @@ Support for Sass, CSS optimizing, CSS into head injection, media file compressin
 **2.** Create a `Gulpfile.js` and paste the following content in it. For all options and docs see the [AmpCreatorOptions typing](https://github.com/bemit/create-amp-page/blob/master/src/AmpCreatorOptions.d.ts).
 
 ```js
-const path = require('path')
-const {ampCreator} = require('create-amp-page')
+import path from 'path'
+import gulp from 'gulp'
+import {ampCreator} from './src/index.js'
+import {getPageInfo} from './src/pageTools.js'
 
-module.exports = ampCreator({
-    port: 4488,
-    paths: {
-        styles: 'src/styles',
-        stylesInject: 'main.css',
-        html: 'src/html',
-        htmlPages: 'src/html/pages',
-        media: 'src/media',
-        /* copy: [
-            {src: ['./src/api/*'], prefix: 1},
-            {src: ['./public/*'], prefix: 2},
-        ], */
-        dist: 'build',
-        distMedia: 'media',
-        distStyles: 'styles',
+const port = 4488
+
+/**
+ * @type {PagesUrlsMap}
+ */
+const urls = {
+    example: {
+        local: {base: 'http://localhost:' + port + '/default/'},
+        prod: {base: 'https://example.org/'},
     },
+}
+
+const pages = {
+    example: {
+        paths: {
+            styles: 'src/styles',
+            stylesInject: 'main.css',
+            style: 'main.scss',
+            html: 'src/html',
+            dist: 'build',
+            distStyles: 'styles',
+        },
+    },
+}
+const isDev = process.env.NODE_ENV === 'development'
+
+const tasks = ampCreator({
+    port: port,
+    dist: 'build',
+    srcMedia: 'src/media',
+    distMedia: 'media',
+    pages: pages,
+    collections: [{
+        fm: (file) => 'src/data/' + path.basename(file).slice(0, '.twig'.length * -1) + '.md',
+        tpl: 'src/html/pages/*.twig',
+        pagesByTpl: true,
+        base: '',
+        pageId: 'example',
+    }, {
+        fm: 'src/data/blog/*.md',
+        tpl: 'src/html/blog.twig',
+        base: 'blog',
+        pageId: 'example',
+    }],
+    ampOptimize: !isDev,
+    // minifyHtml: false,
+    cleanInlineCSS: !isDev,
+    // for css injection of non-AMP pages:
+    // cssInjectTag: '<style>',
     twig: {
-        // custom global template data
-        data: {},
+        data: {ampEnabled: true},
+        fmMap: (data, files) => {
+            const pageId = files.pageId
+            const {
+                pagePath, pageBase,
+            } = getPageInfo(files, urls, pageId, isDev ? 'local' : 'prod')
+            const pageData = pages[pageId]
+            return {
+                pageId: pageId,
+                styleSheets: [
+                    pageData.paths.stylesInject,
+                ],
+                head: {
+                    title: data.attributes.title,
+                    description: data.attributes.description,
+                    lang: data.attributes.lang,
+                },
+                links: {
+                    canonical: pageBase + pagePath,
+                    origin: pageBase,
+                    cdn: isDev ? 'http://localhost:' + port + '/' : pageBase,
+                },
+                content: data.body,
+            }
+        },
+        logicLoader: async () => {
+            return {}
+        },
     },
-    // faster rebuilds on dev:
-    ampOptimize: process.env.NODE_ENV === 'production',
-    cleanInlineCSS: process.env.NODE_ENV === 'production',
     prettyUrlExtensions: ['html'],
 })
+
+Object.keys(tasks).forEach(taskName => gulp.task(taskName, tasks[taskName]))
 ```
 
-**3.** Add those scripts into `package.json`:
+**3.** Add those scripts into `package.json`, the project must be `type=module`:
 
 ```json
 {
+    "type": "module",
     "scripts": {
         "tasks": "gulp --tasks",
         "start": "cross-env NODE_ENV=development gulp watch",
@@ -80,7 +141,7 @@ module.exports = {
 }
 ```
 
-**5.** Add your `src` folders & files, minimum for this config: `src/styles/main.scss` and `src/html/pages/index.twig` and `src/media/.gitkeep`
+**5.** Add your `src` folders & files, minimum for this config: `src/styles/main.scss`, `src/html/pages/index.twig`, `src/data/index.md` and `src/media/.gitkeep`
 
 **6.** Install this SSR: `npm i --save create-amp-page`
 
@@ -96,7 +157,7 @@ Checkout the starter repos:
 - ⚛️ [bemit/create-page-starter](https://github.com/bemit/create-page-starter)
     - ready configured for static pages, non-AMP pages
     - with babel/webpack build process
-      - support for typescript/react configured
+        - support for typescript/react configured
     - service worker example integrated
     - includes a simple twig template
 
@@ -105,11 +166,31 @@ Checkout the starter repos:
 Two integrated ways of page generation:
 
 1. One page per template file
-2. One page per content file, but for multiple files one template
+2. One page per content file, for multiple content-files one template
 
-**First** is also called `twig-as-entrypoint`, here the config `paths.htmlPages` is used as root folder for single pages.
+Since `1.0.0-alpha.8` both page generations are configured by `collections`:
 
-**Second** is also called `frontmatter-as-entrypoint` or `collections`, here the config `collections` can be used to define multiple folders and map them to their dist. The folder must contain frontmatter files, for each folder the files are rendered against one template. It is possible to have another `fmMap` logic for each folder.
+```js
+const options = {
+    collections: [
+        {
+            // create one page per `twig` file, `fm` needs to return the relative path to the frontmatter file
+            fm: (file) => 'example/data/' + path.basename(file).slice(0, '.twig'.length * -1) + '.md',
+            tpl: 'example/html/pages/*.twig',
+            pagesByTpl: true,
+            base: '',
+            pageId: 'example',
+        },
+        {
+            // create one page per `fm` file, one `tpl` is used for all pages
+            fm: 'example/data/blog/*.md',
+            tpl: 'example/html/blog.twig',
+            base: 'blog',
+            pageId: 'example',
+        }
+    ],
+}
+```
 
 ## Twig Functions
 
@@ -164,6 +245,7 @@ Embed then in file, pixels at `srcset`:
 Generates HTML like:
 
 ```html
+
 <amp-img
         src="/media/img-01.png?key=2l8ybbe1tjSP"
         width="1280" height="421"

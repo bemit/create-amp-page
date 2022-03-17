@@ -36,7 +36,7 @@ const tasks = ampCreator({
     distMedia: 'media',
     pages: pages,
     collections: [{
-        fm: (file) => 'example/data/' + path.basename(file).replace('.twig', '').replace('.md', '') + '.md',
+        fm: (file) => 'example/data/' + path.basename(file).slice(0, '.twig'.length * -1) + '.md',
         tpl: 'example/html/pages/*.twig',
         pagesByTpl: true,
         base: '',
