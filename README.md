@@ -23,8 +23,10 @@ Support for Sass, CSS optimizing, CSS into head injection, media file compressin
 ```js
 import path from 'path'
 import gulp from 'gulp'
-import {ampCreator} from './src/index.js'
-import {getPageInfo} from './src/pageTools.js'
+import {ampCreator, getPageInfo} from 'create-amp-page'
+// since `1.0.0-beta.0` the amp-optimizer is a peer-dep (you need to install it additionally!)
+// makes only sense if you want AMP-valid HTML
+import AmpOptimizer from '@ampproject/toolbox-optimizer'
 
 const port = 4488
 
@@ -70,9 +72,12 @@ const tasks = ampCreator({
         base: 'blog',
         pageId: 'example',
     }],
-    ampOptimize: !isDev,
+    // when `ampEnabled: true` use the `ampOptimizer` for HTML minification and more
+    ampOptimizer: !isDev ? AmpOptimizer.create({}) : undefined,
+    // when `ampEnabled: false` use `minifyHtml` for HTML minification and more
     // minifyHtml: false,
     cleanInlineCSS: !isDev,
+    cleanInlineCSSWhitelist: ['#anc-*'],
     // for css injection of non-AMP pages:
     // cssInjectTag: '<style>',
     twig: {
