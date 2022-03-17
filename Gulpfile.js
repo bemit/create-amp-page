@@ -1,9 +1,13 @@
 import path from 'path'
 import gulp from 'gulp'
 import {ampCreator} from './src/index.js'
+import {getPageInfo} from './src/pageTools.js'
 
 const port = 4488
 
+/**
+ * @type {PagesUrlsMap}
+ */
 const urls = {
     example: {
         local: {base: 'http://localhost:' + port + '/default/'},
@@ -51,14 +55,10 @@ const tasks = ampCreator({
     twig: {
         data: {ampEnabled: true},
         fmMap: (data, files) => {
-            const basePath = files.base.replace('\\', '/')
-            const relPathRaw = path.basename(files.pagesByTpl ? files.tpl : files.pathFm).replace('.twig', '').replace('.md', '')
-            const relPath = basePath + (relPathRaw === 'index' ? '' : relPathRaw)
             const pageId = files.pageId
-            const pageEnv = isDev ? 'local' : 'prod'
-            const urlMap = urls[pageId][pageEnv]
-            const pageBase = urlMap.base
-            const pagePath = urlMap.path ? urlMap.path(relPath) : relPath
+            const {
+                pagePath, pageBase,
+            } = getPageInfo(files, urls, pageId, isDev ? 'local' : 'prod')
             const pageData = pages[pageId]
             return {
                 pageId: pageId,

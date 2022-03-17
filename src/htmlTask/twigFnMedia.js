@@ -86,7 +86,7 @@ export const {resizeUsedImages, getImage, clearGetMediaCache} = (() => {
     })
 
     // not a twig function but used directly here to resize images after content processing
-    const resizeUsedImages = ({media, dist, distMedia, imageminPlugins}) => function resizeUsedImages(done) {
+    const resizeUsedImages = ({media, dist, distMedia, imageminPlugins}) => function resizeUsedImages() {
         const resizer = []
 
         if(imageRefs.current) {
@@ -126,7 +126,7 @@ export const {resizeUsedImages, getImage, clearGetMediaCache} = (() => {
                                     }
                                 })
                                 .src(srcPath)
-                                .pipe(through2.obj(async(file, _, cb) => {
+                                .pipe(through2.obj(async (file, _, cb) => {
                                     if(file.isBuffer()) {
                                         sharp(file.contents)
                                             .resize(width, height)
@@ -177,7 +177,7 @@ export const {resizeUsedImages, getImage, clearGetMediaCache} = (() => {
             })
         }
 
-        return Promise.all(resizer)
+        return Promise.all(resizer).then(() => undefined)
     }
     return {resizeUsedImages, getImage, clearGetMediaCache}
 })()

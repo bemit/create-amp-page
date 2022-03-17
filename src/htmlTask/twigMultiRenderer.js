@@ -13,9 +13,8 @@ export function twigMultiLoad(
     } = collection
 
     const applyMatterGetTpl = (file, cb) => {
-        new Promise(async (resolve, reject) => {
-            try {
-                const {jsonContent, jsonFile} = await loadJsonData(json, file.path, jsonLoader, jsonFailOnMissing)
+        loadJsonData(json, file.path, jsonLoader, jsonFailOnMissing)
+            .then(({jsonContent, jsonFile}) => {
                 const mappedFiles = {
                     ...r,
                     base: base,
@@ -35,11 +34,8 @@ export function twigMultiLoad(
                     fmMap,
                     mappedFiles,
                 )
-                resolve(file)
-            } catch(e) {
-                reject(e)
-            }
-        })
+                return file
+            })
             .then((file) => {
                 cb(null, file)
             })

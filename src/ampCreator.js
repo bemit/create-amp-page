@@ -39,6 +39,7 @@ export function ampCreator(options, setup, wrap) {
         cleanInlineCSS,
         cleanInlineCSSWhitelist,
         cssInjectTag,
+        cssFailOnSize,
         pages,
         collections,
         // media
@@ -49,34 +50,17 @@ export function ampCreator(options, setup, wrap) {
         watchOptions,
     } = options
 
+    if(!pages) {
+        throw new Error('ampCreator missing `pages`')
+    }
+
     const pageIds = Object.keys(pages)
 
     if(pageIds.includes('media')) {
         throw new Error('Page with id `media` found, reserved name.')
     }
 
-    const browserSyncInstances = {}
-
     function browserSyncSetup(done) {
-        /*pageIds.forEach((pageId) => {
-            browserSyncInstances[pageId] = browsersyncCreator.create('page-' + pageId)
-            browserSyncInstances[pageId].init({
-                port: pages[pageId].port,
-                proxy: {
-                    target: 'localhost:' + port + '/' +
-                        (pages[pageId].paths.dist.indexOf(dist + '/') === 0 ? pages[pageId].paths.dist.slice((dist + '/').length) : pages[pageId].paths.dist) + '/',
-                    ws: true,
-                },
-                ui: false,
-                open: false,
-                notify: true,
-                /*proxyReq: [
-                    function(proxyReq) {
-                        proxyReq.setHeader('X-Special-Proxy-Header', 'foobar')
-                    },
-                ],
-            })
-        })*/
         browsersync.init({
             port: port,
             open: !!open,
@@ -122,6 +106,7 @@ export function ampCreator(options, setup, wrap) {
                     cleanInlineCSS,
                     cleanInlineCSSWhitelist,
                     cssInjectTag,
+                    cssFailOnSize,
                     collections: collections.filter(collection => collection.pageId === pageId || !collection.pageId),
                     browsersync,
                 }),
@@ -137,17 +122,7 @@ export function ampCreator(options, setup, wrap) {
         imageminPlugins,
         browsersync,
     })
-    /*const gulpMedia = parallel(
-        pageIds.filter(pageId => pages[pageId].paths.media && pages[pageId].paths.distMedia)
-            .map(pageId =>
-                makeMediaTask({
-                    paths: pages[pageId].paths,
-                    media,
-                    imageminPlugins,
-                    browsersync,
-                }),
-            ),
-    )*/
+
     const gulpCopyTasks =
         pageIds.filter(pageId => pages[pageId].paths.copy)
             .map(pageId =>

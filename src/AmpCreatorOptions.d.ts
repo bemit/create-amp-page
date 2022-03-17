@@ -87,6 +87,10 @@ export interface AmpCreatorOptions {
         // OR when `pagesByTpl=true`:
         // receives the absolute path to the template file, must return path to front-matter file, for "file does not exist" without an error return `undefined`
         fm: string | (((file: string) => string | undefined) | undefined)
+        // optional, experimental, only for `pagesByTpl=true`,
+        // async frontmatter loader, if `fm` is defined returns a `string` it is executed with that `string`,
+        // if `fmLoad` is not defined, the standard read from json-file is executed
+        fmLoad?: (fmPath: string) => Promise<{ [k: string]: any } | undefined>
         // path to the single template that will be used
         tpl: string
         // if the `tpl` path should be used to build the data paths, then `data` is used as relative prefix for the tpl-file names
@@ -195,6 +199,7 @@ export interface AmpCreatorOptions {
 
     // custom inject tag, for AMP / default: 'style amp-custom>'
     cssInjectTag?: string
+    cssFailOnSize?: boolean
 
     // remove unused inline CSS
     cleanInlineCSS?: boolean
