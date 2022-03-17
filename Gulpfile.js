@@ -1,7 +1,7 @@
 import path from 'path'
 import gulp from 'gulp'
-import {ampCreator} from './src/index.js'
-import {getPageInfo} from './src/pageTools.js'
+import {getPageInfo, ampCreator} from './src/index.js'
+import AmpOptimizer from '@ampproject/toolbox-optimizer'
 
 const port = 4488
 
@@ -47,7 +47,7 @@ const tasks = ampCreator({
         base: 'blog',
         pageId: 'example',
     }],
-    ampOptimize: !isDev,
+    ampOptimizer: !isDev ? AmpOptimizer.create({}) : undefined,
     // minifyHtml: false,
     cleanInlineCSS: !isDev,
     // for css injection of non-AMP pages:

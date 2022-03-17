@@ -1,6 +1,6 @@
 {
     "name": "create-amp-page",
-    "version": "1.0.0-alpha.11",
+    "version": "1.0.0-beta.0",
     "license": "MIT",
     "homepage": "https://github.com/bemit/create-amp-page",
     "author": "Michael Becker <https://mlbr.xyz>",
@@ -37,11 +37,20 @@
         "clean": "gulp clean"
     },
     "devDependencies": {
-        "@formanta/sass": "^0.20.2"
+        "@formanta/sass": "^0.20.2",
+        "@ampproject/toolbox-optimizer": "^2.7.4"
+    },
+    "peerDependencies": {
+        "@ampproject/toolbox-optimizer": "^2.7.4"
+    },
+    "peerDependenciesMeta": {
+        "@ampproject/toolbox-optimizer": {
+            "optional": true
+        }
     },
     "dependencies": {
-        "@ampproject/toolbox-optimizer": "^2.7.4",
         "@types/gulp": "^4.0.8",
+        "@types/html-minifier": "^4.0.2",
         "@types/through2": "^2.0.36",
         "@types/twig": "^1.12.5",
         "autoprefixer": "^10.3.4",

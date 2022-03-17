@@ -15,17 +15,20 @@ import {getImage, resizeUsedImages, addImageSuffix} from './twigFnMedia.js'
 
 const {parallel, series, ...gulp} = gulpBase
 
-export const makeTwigHandler = ({
-                                    srcMedia, distMedia,
-                                    paths, twig,
-                                    ampOptimize,
-                                    minifyHtml,
-                                    cleanInlineCSS,
-                                    cleanInlineCSSWhitelist,
-                                    cssInjectTag,
-                                    cssFailOnSize,
-                                    cssBuffer,
-                                }) => {
+export const makeTwigHandler = (
+    {
+        srcMedia, distMedia,
+        paths, twig,
+        ampOptimizer: ampOptimizerLib,
+        minifyHtml, minifyHtmlOptions,
+        cleanInlineCSS, cleanInlineCSSOptions,
+        cleanInlineCSSWhitelist,
+        cssInjectTag,
+        cssFailOnSize,
+        cssSizeLimit,
+        cssBuffer,
+    },
+) => {
     const extendedTwigFunctions = [
         getImage(srcMedia, distMedia),
         embedScript(paths.dist),
@@ -37,13 +40,8 @@ export const makeTwigHandler = ({
             // share twig logic for `twig-as-entrypoint` and `frontmatter-as-entrypoint` (collections)
             if(twig.logicLoader) {
                 return twig.logicLoader()
-                    .then((logic) => {
-                        // const extraLogic = {
-                        //     functions: undefined,
-                        //     filters: undefined,
-                        // }
-                        return logic
-                    })
+                    // logic = { functions: undefined, filters: undefined }
+                    .then((logic) => logic)
             }
             return {}
         })
@@ -70,17 +68,23 @@ export const makeTwigHandler = ({
                     // middlewares after twig compilation
                     // middlewares for style injection
                     .pipe(injectCSS({
-                        paths, injectTag: cssInjectTag,
+                        paths: {
+                            stylesInject: paths.stylesInject,
+                            dist: paths.dist,
+                            distStyles: paths.distStyles,
+                        },
+                        injectTag: cssInjectTag,
                         failOnSize: cssFailOnSize,
+                        sizeLimit: cssSizeLimit,
                         cssBuffer: cssBuffer,
                     }))
                     // middlewares after CSS injection
                     .pipe(cleanHtmlCss({
-                        minifyHtml,
-                        cleanInlineCSS,
+                        minifyHtml, minifyHtmlOptions,
+                        cleanInlineCSS, cleanInlineCSSOptions,
                         cleanInlineCSSWhitelist,
                     }))
-                    .pipe(ampOptimizer(ampOptimize)),
+                    .pipe(ampOptimizer(ampOptimizerLib)),
             )
         })
 }

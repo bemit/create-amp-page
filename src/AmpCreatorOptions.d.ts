@@ -1,4 +1,6 @@
 import { extendFilter, extendFunction, extendTest, extendTag } from 'twig'
+import { defaults } from 'email-comb'
+import { Options as HtmlMinifierOptions } from 'html-minifier'
 
 export type FmMapFiles = {
     // the `tpl` file path
@@ -75,8 +77,6 @@ export interface AmpCreatorOptions {
 
     pages?: {
         [page: string]: {
-            // starts a new proxy on this port
-            //port?: number
             paths: AmpCreatorOptionsPaths
         }
     }
@@ -175,39 +175,28 @@ export interface AmpCreatorOptions {
         media?: string[]
     }
 
-    // auto use default configs with `true`;
-    // or specify custom options, see all:
-    // https://github.com/ampproject/amp-toolbox/tree/main/packages/optimizer#options
-    ampOptimize?: boolean | {
-        autoAddMandatoryTags?: boolean
-        autoExtensionImport?: boolean
-        extensionVersions?: Object
-        format?: string | 'AMP' | 'AMP4EMAIL' | 'AMP4ADS'
-        imageBasePath?: string | (
-            /**
-             * @param imgSrc the path used in `src`
-             * @param params todo: correctly type this
-             */
-            (imgSrc: string, params: any) => string)
-        imageOptimizer?: (src: string, width: string | number) => string
-        lts?: boolean
-        markdown?: boolean
-        minify?: boolean
-        preloadHeroImage?: boolean
-        verbose?: boolean
-    }
+    // enable the ampOptimizer, since 1.0.0-alpha.12 pass down an instance!
+    ampOptimizer?: any
 
     // custom inject tag, for AMP / default: 'style amp-custom>'
     cssInjectTag?: string
+    // if an `Error` should be thrown when exceeding `cssSizeLimit`
     cssFailOnSize?: boolean
+    // maximum bytes for CSS file, after minimizing, before clean-unused,
+    // defaults to `75000` bytes (AMP limit)
+    cssSizeLimit?: number
 
     // remove unused inline CSS
     cleanInlineCSS?: boolean
     // css selectors which must not be removed, `.classes`, `#ids`, `.simple-whitelist-*`, `h1`, `p`
     cleanInlineCSSWhitelist?: string[]
+    // options for `email-comb` - run when `cleanInlineCSS` is `true`,
+    // when `cleanInlineCSSOptions` specified the `cleanInlineCSSWhitelist` options does nothing
+    cleanInlineCSSOptions?: Partial<typeof defaults>
 
-    // minify HTML, when not using `ampOptimize`
+    // minify HTML, when not using `ampOptimizer`
     minifyHtml?: boolean
+    minifyHtmlOptions?: HtmlMinifierOptions
 
     // additional folders to delete
     cleanFolders?: string[]
