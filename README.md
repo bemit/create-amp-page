@@ -63,7 +63,6 @@ const tasks = ampCreator({
     collections: [{
         fm: (file) => 'src/data/' + path.basename(file).slice(0, '.twig'.length * -1) + '.md',
         tpl: 'src/html/pages/*.twig',
-        pagesByTpl: true,
         base: '',
         pageId: 'example',
     }, {
@@ -179,10 +178,9 @@ Since `1.0.0-alpha.8` both page generations are configured by `collections`:
 const options = {
     collections: [
         {
-            // create one page per `twig` file, `fm` needs to return the relative path to the frontmatter file
+            // create one page per `twig` file, `fm` needs to return the relative path to the frontmatter file (or `undefined` fo no-fm`
             fm: (file) => 'example/data/' + path.basename(file).slice(0, '.twig'.length * -1) + '.md',
             tpl: 'example/html/pages/*.twig',
-            pagesByTpl: true,
             base: '',
             pageId: 'example',
         },
@@ -282,7 +280,7 @@ This project is free software distributed under the **MIT License**.
 
 See: [LICENSE](LICENSE).
 
-© 2022 [Michael Becker](https://mlbr.xyz)
+© 2022 [Michael Becker](https://i-am-digital.eu)
 
 ### Versions
 

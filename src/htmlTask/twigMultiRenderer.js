@@ -24,17 +24,20 @@ export function twigMultiLoad(
                     cwd: file.cwd,
                     pageId: pageId,
                 }
-                // switch to the template handler path, after this custom frontmatter handler
-                file.pathFm = file.path
-                file.path = path.resolve(file.cwd, tpl)
-                file.base = path.dirname(file.path)
-                file.data = handleData(
+                return handleData(
                     data, customMerge, jsonContent,
                     file.contents.toString(),
                     fmMap,
                     mappedFiles,
                 )
-                return file
+                    .then((fullData) => {
+                        file.data = fullData
+                        // switch to the template handler path, after this custom frontmatter handler
+                        file.pathFm = file.path
+                        file.path = path.resolve(file.cwd, tpl)
+                        file.base = path.dirname(file.path)
+                        return file
+                    })
             })
             .then((file) => {
                 cb(null, file)

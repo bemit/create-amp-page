@@ -1,4 +1,4 @@
-import { FmMapFiles } from './AmpCreatorOptions'
+import { FmMapFile } from './AmpCreatorOptions'
 
 export interface PageUrlMap {
     base: string
@@ -10,7 +10,7 @@ export interface PagesUrlsMap {
     }
 }
 
-export function getPageInfo(files: FmMapFiles, urls: PagesUrlsMap, pageId: string, pageEnv: string): {
+export function getPageInfo(file: FmMapFile, urls: PagesUrlsMap, pageId: string, pageEnv: string): {
     basePath: string
     pageBase: string
     pagePath: string

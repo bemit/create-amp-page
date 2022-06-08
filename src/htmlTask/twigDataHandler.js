@@ -2,7 +2,10 @@ import fs from 'fs'
 import gulpData from 'gulp-data'
 import frontmatter from 'front-matter'
 
-export const handleData = (
+const AsyncFunction = (async () => {
+}).constructor
+
+export const handleData = async (
     data = {},
     customMerge,
     jsonContent,
@@ -23,12 +26,19 @@ export const handleData = (
     }
 
     if(fmContent && fmMap) {
+        const fmData = frontmatter(String(fmContent))
+        let fmMapResult = undefined
+        if(fmMap instanceof AsyncFunction || fmMap instanceof Promise) {
+            fmMapResult = await fmMap(fmData, mappedFiles, data)
+        } else {
+            fmMapResult = fmMap(fmData, mappedFiles, data)
+        }
         if(customMerge) {
-            data = customMerge(data, fmMap(frontmatter(String(fmContent)), mappedFiles))
+            data = customMerge(data, fmMapResult)
         } else {
             data = {
                 ...data,
-                ...fmMap(frontmatter(String(fmContent)), mappedFiles),
+                ...fmMapResult,
             }
         }
     }
@@ -119,19 +129,23 @@ export function twigDataHandler(
                     pathFm: pathFm,
                     base: base,
                     pageId: pageId,
+                    pagesByTpl: true,
                 }
                 // todo: add here or afterwards an optional `cb` to do something with the full merged page, additionally to any template rendering / beforehand?
                 //       like a special `render page` flow, where in the end the template get's rendered, but also it is possible to mangle the template
                 //       check if it could be build with `subpipe`
-                cb(
-                    undefined,
-                    handleData(
-                        data, customMerge, jsonContent,
-                        fmContent,
-                        fmMap,
-                        mappedFiles,
-                    ),
+                handleData(
+                    data, customMerge, jsonContent,
+                    fmContent,
+                    fmMap,
+                    mappedFiles,
                 )
+                    .then((fullData) => {
+                        cb(undefined, fullData)
+                    })
+                    .catch((e) => {
+                        cb(e || new Error('handleData has failed'))
+                    })
             })
             .catch((e) => {
                 cb(e)

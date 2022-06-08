@@ -28,13 +28,18 @@ export function ampCreator(options, setup, wrap) {
         dist,
         historyFallback,
         // browsersync
-        port, open, startPath,
+        port, open,
         prettyUrlExtensions, serveStaticMiddleware,
         // clean
         cleanFolders,
+        // data / frontmatter
+        data,
+        fmMap,
+        customMerge,
         // html / twig
         twig,
         ampOptimizer,
+        ampOptimize,
         minifyHtml, minifyHtmlOptions,
         cleanInlineCSS, cleanInlineCSSOptions,
         cleanInlineCSSWhitelist,
@@ -52,6 +57,19 @@ export function ampCreator(options, setup, wrap) {
 
     if(!pages) {
         throw new Error('ampCreator missing `pages`')
+    }
+
+    if(typeof ampOptimize !== 'undefined') {
+        throw new Error('ampCreator option `ampOptimize` has been removed, instead add an optimizer instance as `ampOptimizer`')
+    }
+    if(typeof twig.data !== 'undefined') {
+        throw new Error('ampCreator option `twig.data` has been moved out of `twig`, now in top level of config')
+    }
+    if(typeof twig.fmMap !== 'undefined') {
+        throw new Error('ampCreator option `twig.fmMap` has been moved out of `twig`, now in top level of config')
+    }
+    if(typeof twig.customMerge !== 'undefined') {
+        throw new Error('ampCreator option `twig.customMerge` has been moved out of `twig`, now in top level of config')
     }
 
     const pageIds = Object.keys(pages)
@@ -100,6 +118,9 @@ export function ampCreator(options, setup, wrap) {
                     srcMedia, distMedia,
                     dist,
                     twig,
+                    data,
+                    fmMap,
+                    customMerge,
                     ampOptimizer,
                     minifyHtml, minifyHtmlOptions,
                     imageminPlugins,
@@ -142,7 +163,7 @@ export function ampCreator(options, setup, wrap) {
                 if(paths.styles) {
                     gulp.watch([paths.styles + '/**/*.(scss|sass)', ...watchFolders.sass], watchOptions,
                         // only when the stylesheet should be injected, HTML must be build after CSS
-                        paths.stylesInject ? series(gulpCss, gulpHtml) : gulpCss,
+                        data.cssInject && paths.stylesInject ? series(gulpCss, gulpHtml) : gulpCss,
                     )
                 }
                 if(paths.html || watchFolders.twig.length > 0) {

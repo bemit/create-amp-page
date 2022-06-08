@@ -1,11 +1,11 @@
 import path from 'path'
 
-export function getPageInfo(files, urls, pageId, pageEnv) {
-    const basePath = files.base.replace('\\', '/')
+export function getPageInfo(file, urls, pageId, pageEnv) {
+    const basePath = file.base.replace('\\', '/')
     const extensions = ['twig', 'md']
     const relPathRaw = extensions.reduce((p, ext) =>
             p.replace(new RegExp('.' + ext + '$'), ''),
-        path.basename(files.pagesByTpl ? files.tpl : files.pathFm),
+        path.basename(file.pagesByTpl ? file.tpl : file.pathFm),
     )
 
     const relPath = basePath + (relPathRaw === 'index' ? '' : relPathRaw)

@@ -95,6 +95,9 @@ export const makeHtmlTask = (
         srcMedia, distMedia,
         dist,
         twig,
+        data,
+        fmMap,
+        customMerge,
         collections,
         browsersync,
         additionalHtmlTasks = [],
@@ -111,9 +114,15 @@ export const makeHtmlTask = (
     })
 
     if(collections && Array.isArray(collections)) {
-        collections.forEach(({fmMap, customMerge, ...collection}) => {
+        collections.forEach((
+            {
+                fmMap: collectionFmMap,
+                customMerge: collectionCustomMerge,
+                ...collection
+            },
+        ) => {
             const cwd = process.cwd()
-            if(collection.pagesByTpl) {
+            if(typeof collection.fm === 'function') {
                 htmlTasks.push(
                     function pagesByTemplates() {
                         return twigHandler()
@@ -123,15 +132,16 @@ export const makeHtmlTask = (
                                         .pipe(
                                             twigDataHandler(
                                                 {
-                                                    ...twig,
-                                                    ...(fmMap ? {fmMap: fmMap} : {}),
-                                                    ...(customMerge ? {customMerge: customMerge} : {}),
+                                                    data,
+                                                    fmMap: collectionFmMap || fmMap,
+                                                    customMerge: collectionCustomMerge || customMerge,
                                                 },
                                                 collection,
+                                                true,
                                             ),
                                         )
                                         .pipe(twigSubPipe)
-                                        .pipe(gulp.dest(paths.dist))
+                                        .pipe(gulp.dest(path.join(paths.dist, collection.base), {cwd: cwd}))
                                         .pipe(browsersync.stream())
                                         .on('finish', resolve)
                                         .on('error', reject)
@@ -147,14 +157,16 @@ export const makeHtmlTask = (
                                 return new Promise((resolve, reject) => {
                                     // todo: add support for different loaders, incl. async
                                     gulp.src(collection.fm)
-                                        .pipe(twigMultiLoad(
-                                            {
-                                                ...twig,
-                                                ...(fmMap ? {fmMap: fmMap} : {}),
-                                                ...(customMerge ? {customMerge: customMerge} : {}),
-                                            },
-                                            collection,
-                                        ))
+                                        .pipe(
+                                            twigMultiLoad(
+                                                {
+                                                    data,
+                                                    fmMap: collectionFmMap || fmMap,
+                                                    customMerge: collectionCustomMerge || customMerge,
+                                                },
+                                                collection,
+                                            ),
+                                        )
                                         .pipe(twigSubPipe)
                                         .pipe(twigMultiSave(collection.ext, collection.extOut))
                                         .pipe(gulp.dest(path.join(paths.dist, collection.base), {cwd: cwd}))

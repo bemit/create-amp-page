@@ -1,8 +1,9 @@
 import { extendFilter, extendFunction, extendTest, extendTag } from 'twig'
 import { defaults } from 'email-comb'
 import { Options as HtmlMinifierOptions } from 'html-minifier'
+import { WatchOptions } from 'gulp'
 
-export type FmMapFiles = {
+export type FmMapFile = {
     // the `tpl` file path
     tpl: string
     // if the content is created by the template
@@ -16,15 +17,23 @@ export type FmMapFiles = {
     pageId?: string
 }
 
-export type fmMap = (
-    data: {
+export type fmMapFn = (
+    // the `frontmatter` data
+    fm: {
         attributes: Object
         body: string
         bodyBegin: number
         frontmatter: string
     },
-    mappedFiles: FmMapFiles
+    // information for the current rendered file
+    fmFile: FmMapFile,
+    // the data object so far, e.g. global data and `json` file,
+    // ONLY read this variable, the full `data` object is generated after `fmMap`
+    data: Object | undefined,
 ) => Object
+
+export type fmMap = fmMapFn | ((...attr: Parameters<fmMapFn>) => ReturnType<fmMapFn>)
+
 export type customMerge = (data1: Object, data2: Object) => Object
 
 export interface CopyInfo {
@@ -59,7 +68,52 @@ export interface AmpCreatorOptionsPaths {
     distStyles: string
 }
 
-export interface AmpCreatorOptions {
+export interface AmpCreatorCollection {
+    // path to content directory with `*` placeholder for file, is passed to `gulp.src`, supports any file [`front-matter`](https://www.npmjs.com/package/front-matter) supports
+    // OR a function for `pages-by-tpl`:
+    // receives the absolute path to the template file, must return path to front-matter file, for "file does not exist" without an error return `undefined`
+    fm: string | (((file: string) => string | undefined) | undefined)
+    // optional, experimental, only for `pages-by-tpl`,
+    // async frontmatter loader, if `fm` is defined returns a `string` it is executed with that `string`,
+    // if `fmLoad` is not defined, the standard read from json-file is executed
+    fmLoad?: (fmPath: string) => Promise<{ [k: string]: any } | undefined>
+    // path to the single template that will be used
+    tpl: string
+    // relative base to dist
+    base: string
+    // receives the absolute path to the `frontmatter` file, optional
+    // must return path to JSON file to use as data for this template
+    // for "file does not exist" without an error return `undefined`
+    json?: (file: string) => string | undefined
+    jsonFailOnMissing?: boolean
+    // the loader is executed when `json` result is a `string`, receives the result of `json`
+    jsonLoader?: (file: string) => Promise<any | undefined>
+    // overwrite global `fmMap` for this collection
+    fmMap?: fmMap
+    // overwrite global `customMerge` for this collection
+    customMerge?: customMerge
+    // used extension, needed for file handling, defaults to `.md`
+    ext?: string
+    // used output extension, needed for file saving, defaults to `.html`
+    extOut?: string
+    // can be used for e.g. multi page routing
+    pageId?: string
+}
+
+export interface AmpCreatorDataDefault {
+    cssInject?: boolean
+    ampEnabled: boolean
+    injectNetlifyIdentity?: boolean
+    serviceWorker?: {
+        load?: boolean
+        // activated logging on success and error
+        loadDebug?: boolean
+        // activates logging only on error:
+        loadDebugError?: boolean
+    }
+}
+
+export interface AmpCreatorOptions<D extends {} = AmpCreatorDataDefault> {
     // yeah, the port, used by the main browserSync instances, for multi pages use additionally `pages.%.port`
     port: number
     // if browserSync should open the server, if it is a `string`, will be used as start page
@@ -81,40 +135,14 @@ export interface AmpCreatorOptions {
         }
     }
 
-    // generate pages by frontmatter (using e.g. one page per .md file in `data` folder), uses one template for multiple input data files
-    collections?: {
-        // path to content directory with `*` placeholder for file, is passed to `gulp.src`, supports any file [`front-matter`](https://www.npmjs.com/package/front-matter) supports
-        // OR when `pagesByTpl=true`:
-        // receives the absolute path to the template file, must return path to front-matter file, for "file does not exist" without an error return `undefined`
-        fm: string | (((file: string) => string | undefined) | undefined)
-        // optional, experimental, only for `pagesByTpl=true`,
-        // async frontmatter loader, if `fm` is defined returns a `string` it is executed with that `string`,
-        // if `fmLoad` is not defined, the standard read from json-file is executed
-        fmLoad?: (fmPath: string) => Promise<{ [k: string]: any } | undefined>
-        // path to the single template that will be used
-        tpl: string
-        // if the `tpl` path should be used to build the data paths, then `data` is used as relative prefix for the tpl-file names
-        pagesByTpl?: boolean
-        // relative base to dist
-        base: string
-        // receives the absolute path to the `frontmatter` file, optional
-        // must return path to JSON file to use as data for this template
-        // for "file does not exist" without an error return `undefined`
-        json?: (file: string) => string | undefined
-        jsonFailOnMissing?: boolean
-        // the loader is executed when `json` result is a `string`, receives the result of `json`
-        jsonLoader?: (file: string) => Promise<any | undefined>
-        // overwrite global `fmMap` for this collection
-        fmMap?: fmMap
-        // overwrite global `customMerge` for this collection
-        customMerge?: customMerge
-        // used extension, needed for file handling, defaults to `.md`
-        ext?: string
-        // used output extension, needed for file saving, defaults to `.html`
-        extOut?: string
-        // can be used for e.g. multi page routing
-        pageId?: string
-    }[]
+    // define content and template collections
+    // - generate pages by *frontmatter*, uses one template for multiple data files
+    //     - `fm` as string with glob like `src/data/blog/*.md`
+    //     - `tpl` as string like `src/html/blog.twig`
+    // - generate pages by *template*, uses one template for one data file
+    //     - `fm` as function(tplFilePath): string; which must return the non-glob path to the data file
+    //     - `tpl` as string with glob like `src/html/pages/*.twig`
+    collections?: AmpCreatorCollection[]
 
     // which extensions should be removed for prettier URLs, like `/contact` instead of `/contact.html`
     prettyUrlExtensions?: string[]
@@ -122,17 +150,19 @@ export interface AmpCreatorOptions {
     // middlewares passed to serve-static
     serveStaticMiddleware?: Function[]
 
+    // data passed globally to the twig templates, optional
+    data?: D & {
+        [key: string]: any
+    }
+    // receives the front matter and absolute path, for mapping to template values;
+    fmMap?: fmMap
+    // merge function to produce data from multiple sources for twig, optional;
+    // used for merging the three twig data sources: global (`twig.data`), `twig.json` and `twig.fm`;
+    // like let data = customMerge(globalTwigData, jsonData); data = customMerge(data, fmData);
+    customMerge?: customMerge
+
     // settings used for `gulp-twig` and related plugins
     twig?: {
-        // data passed globally to the twig templates, optional
-        data?: { [key: string]: any }
-        // receives the front matter and absolute path, for mapping to template values;
-        // required when `fm` exists, otherwise not used
-        fmMap?: fmMap
-        // merge function to produce data from multiple sources for twig, optional;
-        // used for merging the three twig data sources: global (`twig.data`), `twig.json` and `twig.fm`;
-        // like let data = customMerge(globalTwigData, jsonData); data = customMerge(data, fmData);
-        customMerge?: customMerge
         // extends Twig with new tags types, the `Twig` parameter is the internal Twig.js object;
         // https://github.com/twigjs/twig.js/wiki/Extending-twig.js-With-Custom-Tags
         extend?: (
@@ -174,6 +204,7 @@ export interface AmpCreatorOptions {
         twig?: string[]
         media?: string[]
     }
+    watchOptions?: WatchOptions
 
     // enable the ampOptimizer, since 1.0.0-alpha.12 pass down an instance!
     ampOptimizer?: any
@@ -208,9 +239,10 @@ export interface AmpCreatorOptions {
         jpg?: Object | { progressive: boolean }
         png?: Object | { optimizationLevel: number }
         svg?: Object | { plugins: Object[] }
-    } & Object | Object
+        [k: string]: any
+    }
     // add further imagemin plugins, a function which receives the `imagemin` instance and returns an array of plugins
-    imageminPlugins?: (imagemin: any) => Function[]
+    imageminPlugins?: (imagemin: any, media: AmpCreatorOptions['media']) => Function[]
 }
 
 export function getOptions(options: AmpCreatorOptions): AmpCreatorOptions

@@ -1,9 +1,9 @@
 {
     "name": "create-amp-page",
-    "version": "1.0.0-beta.0",
+    "version": "1.0.0-beta.1",
     "license": "MIT",
     "homepage": "https://github.com/bemit/create-amp-page",
-    "author": "Michael Becker <https://mlbr.xyz>",
+    "author": "Michael Becker <https://i-am-digital.eu>",
     "description": "Full fledged static side generator composed out of extendable gulp tasks, optimized for - but not limited to - AMP.",
     "keywords": [
         "amp",
