@@ -1,16 +1,17 @@
 import { TaskFunction } from 'undertaker'
+import { AmpCreatorOptions } from '../AmpCreatorOptions.js'
 
-export type sassOutputStyle = 'nested' | 'expanded' | 'compact' | 'compressed'
+export type SassOutputStyle = 'nested' | 'expanded' | 'compact' | 'compressed'
 
 /**
  * All options from sass, except: `file`, `data`, `outputStyle` and `importer`
  * @see https://github.com/sass/node-sass#options
  */
-export type sassOptions = { [key: string]: any }
+export type SassOptions = { [key: string]: any }
 
 export function cssHandler(
-    done: Function, outputStyle?: sassOutputStyle, options?: sassOptions,
-    postImport?: boolean, postPrefix?: boolean, postNano?: boolean,
+    done: Function,
+    sassConfig: AmpCreatorOptions['sassConfig'],
 ): NodeJS.ReadWriteStream
 
 export interface MakeCssTaskConfig {
@@ -24,6 +25,5 @@ export interface MakeCssTaskConfig {
 export function makeCssTask(
     config: MakeCssTaskConfig,
     browsersync: any | { stream: Function },
-    outputStyle?: sassOutputStyle,
-    options?: sassOptions
+    sassConfig: AmpCreatorOptions['sassConfig'],
 ): TaskFunction

@@ -2,6 +2,7 @@ import { extendFilter, extendFunction, extendTest, extendTag } from 'twig'
 import { defaults } from 'email-comb'
 import { Options as HtmlMinifierOptions } from 'html-minifier'
 import { WatchOptions } from 'gulp'
+import { SassOptions, SassOutputStyle } from './cssTask/index.js'
 
 export type FmMapFile = {
     // the `tpl` file path
@@ -216,6 +217,17 @@ export interface AmpCreatorOptions<D extends {} = AmpCreatorDataDefault> {
     // maximum bytes for CSS file, after minimizing, before clean-unused,
     // defaults to `75000` bytes (AMP limit)
     cssSizeLimit?: number
+    // configuration used for the sass > css > optimized css task
+    sassConfig?: {
+        outputStyle?: SassOutputStyle
+        options?: SassOptions
+        // when true activates `postcss`:`postcssImport`
+        postImport?: boolean
+        // when true activates `postcss`:`autoprefixer`
+        postPrefix?: boolean
+        // when true activates `postcss`:`cssnano`
+        postNano?: boolean
+    }
 
     // remove unused inline CSS
     cleanInlineCSS?: boolean

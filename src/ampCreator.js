@@ -45,6 +45,7 @@ export function ampCreator(options, setup, wrap) {
         cleanInlineCSSWhitelist,
         cssInjectTag,
         cssFailOnSize, cssSizeLimit,
+        sassConfig,
         pages,
         collections,
         // media
@@ -108,7 +109,7 @@ export function ampCreator(options, setup, wrap) {
 
     const gulpCss = parallel(
         pageIds.filter(pageId => pages[pageId].paths.styles)
-            .map(pageId => makeCssTask(pages[pageId].paths, browsersync)),
+            .map(pageId => makeCssTask(pages[pageId].paths, browsersync, sassConfig)),
     )
     const gulpHtml = parallel(
         pageIds.filter(pageId => pages[pageId].paths.styles)

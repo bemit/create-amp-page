@@ -17,10 +17,11 @@ const {parallel, series, ...gulp} = gulpBase
 
 const sassCompiler = sass(nodeSass)
 
-export function cssHandler(
-    done, outputStyle = 'nested', options = {},
-    postImport = true, postPrefix = true, postNano = true,
-) {
+export function cssHandler(done, sassConfig = {}) {
+    const {
+        outputStyle = 'nested', options = {},
+        postImport = true, postPrefix = true, postNano = true,
+    } = sassConfig
     return subpipe((stream) => {
         return stream.pipe(plumber({
                 errorHandler: function(error) {
@@ -43,11 +44,11 @@ export function cssHandler(
     })
 }
 
-export function makeCssTask(paths, browsersync, outputStyle, options) {
+export function makeCssTask(paths, browsersync, sassConfig) {
     return function gulpCss(done) {
         return gulp
             .src(paths.styles + '/' + (paths.style || '**/*.{scss,sass}'))
-            .pipe(cssHandler(done, outputStyle, options))
+            .pipe(cssHandler(done, sassConfig))
             .pipe(gulp.dest(path.join(paths.dist, paths.distStyles)))
             .pipe(browsersync.stream())
     }
